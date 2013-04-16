@@ -213,10 +213,41 @@ function woocommerce_jne_rate_checkout_field_process()
  */ 
 function woocommerce_jne_rate_checkout_field_update_order_meta( $order_id )
 {
-	if ( $_POST['billing_city'] ) 
-		update_post_meta( $order_id, '_billing_city', esc_attr($_POST['billing_city']));
-	if ( $_POST['shipping_city'] ) 
-		update_post_meta( $order_id, '_shipping_city', esc_attr($_POST['shipping_city']));
+	global $jne;
+	
+	$city_state = get_city_state($_POST['billing_city']);
+	if ( $_POST['billing_city'] ) {
+		update_post_meta( $order_id, '_billing_city', esc_attr($city_state));
+	}
+	
+	if ( isset($_POST['shipping_city']) ) {
+		if( !empty($_POST['shipping_city']) ){
+			$city_state = get_city_state($_POST['shipping_city']);
+		}
+		update_post_meta( $order_id, '_shipping_city', esc_attr($city_state));
+	}
+}
+function get_city_state( $index )
+{
+	global $jne;
+	
+	$data = $jne->getRows();
+	$filtered = array_filter($data, function($rows) use($index) {
+		return $rows['index'] == $index;
+	});
+	
+	$_origin = null;
+	if( $filtered ){
+		$state = array_pop($filtered);
+		$_origin = JNE_normalize(sprintf('%s, %s', 
+						trim($state['kecamatan']),
+						$state['kotamadya']
+					));		
+	} else {
+		$_origin = $index;
+	}
+	
+	return $_origin;
 }
 
 

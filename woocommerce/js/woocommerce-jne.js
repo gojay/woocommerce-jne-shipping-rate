@@ -131,5 +131,28 @@ jQuery(function($) {
 	})
 	
 	if( $('select#billing_state').length ) $('select#billing_state').trigger('change')
-	if( $('select#shipping_state').length ) $('select#shipping_state').trigger('change')
+	//if( $('select#shipping_state').length ) $('select#shipping_state').trigger('change')
+	
+	/*
+	 * Ship to billing address
+	 * 
+	 * atau pengiriman ke billing address
+	 * kosongkan combobox shipping state dan shipping city
+	 *
+	 */
+	 
+	var cb_ship_state = $('#shipping_state'),
+		 cb_ship_city = $('#shipping_city');
+		   
+	$('#shiptobilling-checkbox').change(function(e){
+		if( e.target.checked )
+		{
+			// shipping state
+			cb_ship_state.val('')
+						 .chosen().trigger("liszt:updated")
+			// shipping city
+			cb_ship_city.val('')
+						.chosen().trigger("liszt:updated")
+		}
+	})
 })
