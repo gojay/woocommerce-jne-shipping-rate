@@ -1,0 +1,72 @@
+
+#loading img { 
+	border: none;
+	margin-bottom: 0;
+}
+
+.modal.large{
+    width: 780px;
+    margin-left: -390px; /* - width/2 */
+}
+
+.group { display:inline; margin: 0px 10px }
+
+.pagination { margin-top: 5px !important }
+
+.hide {
+	display: none;
+}
+.hidden {
+	visibility: hidden;
+}
+.textcenter{
+	text-align: center !important; 
+}
+.rowcenter {
+	vertical-align: middle !important;
+	text-align: center !important;
+}
+
+#jne{
+	margin: 10px auto;
+	font-family: Verdana,Tahoma,sans-serif;
+	font-size: 8pt !important;
+	color: #333333;	
+}
+
+#jne form { 
+	margin-top: 10px; 
+	}
+	#jne table { 
+		margin-bottom: 10px; 
+		}
+		#jne table th { 
+			font-size: 10pt; 
+		}
+		#jne table td { 
+			font-size: 8pt; 
+		}
+		
+/* widget jne style */
+
+.widget-jne {
+		margin-top: 10px; 
+	}
+	.widget-jne a {
+
+	}
+	.widget-jne a:hover {
+
+	}
+	
+/* end widget jne style */
+
+ul#shipping_method {
+	text-align: left;
+}
+
+ul#shipping_method li {
+	list-style-type: none;
+	margin-left: 0px;
+}
+
