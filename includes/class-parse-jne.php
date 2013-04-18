@@ -33,10 +33,10 @@ class Parse_JNE
 	 */
 	private function _getCache( $action )
 	{
-		$cache_file = sprintf( JNE_PLUGIN_DATA_DIR . '/caches/%s.txt', $action );
-		$data = unserialize(file_get_contents($cache_file));
-		if( !$data )
-		{	
+		$cache_file = sprintf( JNE_PLUGIN_DATA_DIR . '/caches/%s.cache', $action );
+		if( file_exists($cache_file) ){
+			$data = unserialize(file_get_contents($cache_file));
+		} else {	
 			$data = call_user_func( array($this, '_get'.ucwords($action)) );
 			file_put_contents($cache_file, serialize($data));
 		}

@@ -223,7 +223,6 @@ class JNE_Shipping_Rate
 		 * Localizes a script, but only if script has already been added
 		 * see more documentation at http://codex.wordpress.org/Function_Reference/wp_localize_script
 		 */
-		 
 		$woocommerce_jne_settings = get_option('woocommerce_jne_shipping_rate_settings');
 		$jne_params =  array(
 			'ajaxurl' 		=> admin_url('admin-ajax.php'),
@@ -231,7 +230,7 @@ class JNE_Shipping_Rate
 			'is_jne' 		=> ( $post->post_content == '[jne]' ),
 			'woocommerce' 	=> array(
 				'jne_is_enabled' 		=> ( $woocommerce_jne_settings['enabled'] == 'yes' ),
-				'chosen_shipping_city' 	=> $_SESSION['_chosen_shipping_city']
+				'chosen_shipping_city' 	=> $_SESSION['_chosen_city']
 			)			
 		);
 		wp_localize_script( 'jne-ajax', 'jne_params', $jne_params );

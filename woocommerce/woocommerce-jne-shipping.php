@@ -142,13 +142,16 @@ function woocommerce_jne_rate_add_checkout_fields( $fields )
 {		
 	$allowed_fields = array('billing', 'shipping');
 	
+	// debug( $fields['billing'], 'original checkout fields' );
+	
 	// city field
 	$city_field = array(
 		'type' 			=> 'select',
 		'label' 		=> 'City',
 		'placeholder' 	=> 'City',
 		'required' 		=> true,
-		'class' 		=> array('form-row-first', 'update_totals_on_change'),
+		//'class' 		=> array('form-row-first', 'update_totals_on_change'),
+		'class' 		=> array('form-row-wide', 'update_totals_on_change'),
 		'clear' 		=> false,
 		'options'		=> array(
 			'' => __( 'Select an option', 'woocommerce' )
@@ -167,27 +170,60 @@ function woocommerce_jne_rate_add_checkout_fields( $fields )
 			$fields[$type][$type.'_address_1']['class'] = array('form-row-wide');
 			$fields[$type][$type.'_address_2']['class'] = array('form-row-wide');
 			unset($fields[$type][$type.'_address_2']['label_class']);
-			
+						
 			// ubah class postcode field
 			$postcode_field  = $fields[$type][$type.'_postcode'];
 			$postcode_field['class'] = array('form-row-last');
 			$postcode_field['clear'] = true;
 				  
-			// nilai offset postcode field
-			$offset_postcode = array_search($type.'_postcode', array_keys($fields[$type]));
-			$offset_before_postcode = $offset_postcode - 1;
-			$offset_after_postcode  = $offset_postcode + 1;
-			
 			// nilai offset state field
 			$offset_state = array_search($type.'_state', array_keys($fields[$type]));
-			// atur posisi fields
-			$fields[$type] = array_slice($fields[$type], 0, $offset_postcode, true) +
-							 array_slice($fields[$type], $offset_after_postcode, 2, true) +
-							 array($type.'_city' => $city_field) +
-							 array($type.'_postcode' => $postcode_field) +
-							 array_slice($fields[$type], $offset_state, null, true);
+			$offset_after_state  = $offset_state + 1;
+									 
+			/* 
+			 * atur posisi fields
+				country
+				first name | last name
+				company
+				address1
+				address2
+				state(provinsi)
+				city | postcode / zip
+				email | phone
+				
+			 * pd variable $city_field 
+				comment : line 154
+				uncomment : line 153
+			 
+			// ubah class state
+			$fields[$type][$type.'_state']['class'] = array('form-row-wide');
+			$fields[$type] = array_slice($fields[$type], 0, $offset_after_state, true) + // country, first name | last name, company, address1, address2, state(provinsi)
+							 array($type.'_city' => $city_field) + array($type.'_postcode' => $postcode_field) + // city | postcode / zip
+							 array_slice($fields[$type], $offset_after_state, null, true); // email | phone
+			*/
+							 
+			/* 
+			 * atur posisi fields
+				country
+				first name | last name
+				company
+				address1
+				address2
+				state(provinsi) | postcode / zip
+				city
+				email | phone
+				
+			* pd variable $city_field 
+				comment : line 153
+				uncomment : line 154
+			*/
+			$fields[$type] = array_slice($fields[$type], 0, $offset_after_state, true) + // country, first name | last name, company, address1, address2, state(provinsi) |
+							 array($type.'_postcode' => $postcode_field) + array($type.'_city' => $city_field) + // postcode / zip, city
+							 array_slice($fields[$type], $offset_after_state, null, true); // email | phone
 		}		
-	}
+	}	
+	
+	// debug( $fields['billing'], 'customize checkout fields' );
 	
 	return $fields;
 }

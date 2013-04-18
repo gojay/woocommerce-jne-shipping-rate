@@ -1,6 +1,6 @@
 <?php
 /*
-Plugin Name: JNE Shipping Rate
+Plugin Name: WooCommerce JNE Shipping Rate
 Plugin URI: http://codex.wordpress.org
 Description: Menampilkan daftar ongkos pengiriman JNE
 Version: 1.1
@@ -10,6 +10,12 @@ License: GPL2
 */
 global $wp_version;
 define( 'JNE_REQUIRED_WP_VERSION', '3.0' );
+
+// define environment 
+defined('APPLICATION_ENV')
+    || define('APPLICATION_ENV',
+              (getenv('APPLICATION_ENV') ? getenv('APPLICATION_ENV')
+                                         : 'production'));
 
 /**
  * set debug mode
