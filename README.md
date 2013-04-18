@@ -15,3 +15,50 @@ http://gojayincode.com/wordpress-plugin-jne-part-3-woocommerce/
 5. Edit Setting WooCommerce shipping JNE shipping rate 
 
 6. Edit setting shipping method JNE Shipping Rate Woccommerce (Woocommerce > Settings > General > Shipping > JNE Shipping Rate) : setting JNE Shipping Rate
+
+7. Edit WC_Shipping [WooCommerce]/classes/class-wc-shipping.php(line:271) : 
+		
+'calculate_shipping_for_package'
+
+```php
+public function calculate_shipping( $package = array() )
+{				
+	global $jne;	
+	
+	//debug($this->_chosen_city,'call calculate_shipping');
+	//debug($_SESSION,'_SESSION calculate_shipping');
+	
+	if( $this->_chosen_city !== false )
+	{
+		$index_kota   = $this->_chosen_city;
+		// hitung berat
+		$total_weight = $this->calculate_weight();
+		
+		// ambil rows data
+		$data = $jne->getRows();	
+		// filter data berdasarkan index kota
+		$filtered = array_filter($data, function($rows) use($index_kota) {
+			return $rows['index'] == $index_kota;
+		});
+		
+		if( $kota = array_pop($filtered) )
+		{
+			foreach( $kota['tarif'] as $layanan => $tarif )
+			{				
+				// hitung tarif per berat item
+				$cost = $tarif * $total_weight;				
+				$rate = array(
+					'id'        => $this->id . '_' . $layanan,
+					'label'     => sprintf('%s (%s kg x %s)',
+										$this->title . ' ' . strtoupper( $layanan ),
+										$total_weight,
+										JNE_rupiah( $tarif )
+									),
+					'cost'      => $cost
+				);
+				$this->add_rate($rate);
+			}
+		}
+	}
+}
+```
