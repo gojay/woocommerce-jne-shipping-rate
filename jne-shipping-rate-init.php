@@ -197,7 +197,7 @@ class JNE_Shipping_Rate
 	 */
 	public function register_scripts()
 	{
-		global $post;
+		global $post, $current_user;
 		
 		// register styles
 		wp_enqueue_style('jne-css', JNE_PLUGIN_ASSET_URL . '/css/style.css');
@@ -233,6 +233,13 @@ class JNE_Shipping_Rate
 				'chosen_shipping_city' 	=> $_SESSION['_chosen_city']
 			)			
 		);
+		
+		if( is_user_logged_in() )
+		{
+			$user_id = $current_user->data->ID;
+			$jne_params['is_logged_in'] = true;
+		}
+		
 		wp_localize_script( 'jne-ajax', 'jne_params', $jne_params );
 	}
 	
@@ -397,4 +404,5 @@ class JNE_Shipping_Rate
 		
 		exit;
 	}
+	
 }

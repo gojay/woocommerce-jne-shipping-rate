@@ -44,5 +44,6 @@ function calculate_shipping_for_package( $package = array() ) {
 		}
 
 	}
+	return $package;
 }
 ```

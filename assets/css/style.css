@@ -69,3 +69,13 @@ ul#shipping_method li {
 	list-style-type: none;
 	margin-left: 0px;
 }
+
+/* woocommerce form row calcultor shipping validation */
+
+.shipping_calculator .form-row.required select,
+.shipping_calculator .form-row.required input{
+	border:1px solid #B85F56;
+}
+.shipping_calculator .form-row.required:after {
+	content: 'This field is required';
+}

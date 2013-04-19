@@ -1,0 +1,460 @@
+PHP >= 5.3
+Wordpress 3.5.1
+WooCommerce 2.0.7
+
+=================================================== HARDCODE ==========================================================
+define environment
+[WEBROOT]
+.htaccess
+	SetEnv APPLICATION_ENV development
+	
+[WooCommerce_JNE_PLUGIN]
+jne-shipping-rate.php
+// define environment 
+defined('APPLICATION_ENV')
+    || define('APPLICATION_ENV',
+              (getenv('APPLICATION_ENV') ? getenv('APPLICATION_ENV')
+                                         : 'production'));
+										 
+jne-shipping-rate-functions.php
+debug :
+if( APPLICATION_ENV == 'production' ) 
+	return;
+	
+------------------------- WooCommerce Checkout Fields ------------------------------
+	
+------------------------- WooCommerce Calculate Shipping for Package ------------------------------
+
+	
+Edit WC_Shipping [WooCommerce]/classes/class-wc-shipping.php(line:271) : 
+		
+'calculate_shipping_for_package'
+
+1. [Custom Transient] add before create package hash :
+/*
+ *
+ * woocommerce-jne-shipping-rate
+ * add package city destination
+ *
+ */
+if( isset($_POST['post_data']) )
+{
+	parse_str($_POST['post_data']);
+	if( $billing_city ){
+		$package['destination']['city'] = ( $shipping_city ) ? $shipping_city : $billing_city ;
+	}
+}
+/* end added */
+
+2. [Custom Transient] add before create package hash :
+
+buat package filter
+```php
+$package = apply_filters('woocommerce_jne_custom_calculate_shipping_for_package', $package, $_POST['post_data']);	
+```
+
+tambahkan hook filter [woocommerce-jne-shipping-rate]/woocommerce/woocommerce-jne-shipping.php
+```php
+add_filter('woocommerce_jne_custom_calculate_shipping_for_package', 'custom_calculate_shipping_for_package', 10, 2);
+function custom_calculate_shipping_for_package( $package, $post_data )
+{
+	if( $post_data )
+	{
+		parse_str($post_data);
+		if( $billing_city ){
+			$package['destination']['city'] = ( $shipping_city ) ? $shipping_city : $billing_city ;
+		}
+	}
+	
+	return $package;
+}
+```
+
+3. Without Transient
+```php
+function calculate_shipping_for_package( $package = array() ) {
+    if ( ! $this->enabled ) return false;
+    if ( ! $package ) return false;
+
+    $package['rates'] = array();
+
+    foreach ( $this->load_shipping_methods( $package ) as $shipping_method ) {
+
+        if ( $shipping_method->is_available( $package ) ) {
+
+            // Reset Rates
+            $shipping_method->rates = array();
+
+            // Calculate Shipping for package
+            $shipping_method->calculate_shipping( $package );
+
+            // Place rates in package array
+            if ( ! empty( $shipping_method->rates ) && is_array( $shipping_method->rates ) )
+                foreach ( $shipping_method->rates as $rate )
+                    $package['rates'][$rate->id] = $rate;
+        }
+
+    }
+	
+	return $package;
+}
+```
+
+------------------------- WooCommerce Form Validation Calculator Shipping ------------------------------
+
+Edit css [woocommerce-jne-shipping-rate]/assets/css/style.css
+
+```css
+/* woocommerce form row calcultor shipping validation */
+
+.shipping_calculator .form-row.required select,
+.shipping_calculator .form-row.required input{
+	border:1px solid #B85F56;
+}
+.shipping_calculator .form-row.required:after {
+	content: 'This field is required';
+}
+```
+
+Edit js [woocommerce-jne-shipping-rate]/woocommerce/js/woocommerce-jne.js
+
+```js
+/*
+ *
+ * cek validasi & set cookie saat submit 'Shipping Calculator'
+ *
+ * @condition :
+ * - country == ID
+ * @validation
+ * - state null
+ * - city null
+ * @return
+ * - set cookie
+ *
+ */
+$('form.shipping_calculator').submit(function(e){
+	// country
+	var country = $('select#calc_shipping_country').val();
+	// state
+	var stateField = $('select#calc_shipping_state'),
+			 state = stateField.val();
+	// city
+	var cityField = $('select#calc_shipping_city'),
+			 city = cityField.val();
+			 
+	// return jika 'country' bukan ID/indonesia
+	if( country != 'ID' ) return;
+	// cek validasi 'state' dan 'city'
+	if( state == '' || city == '' )
+	{
+		console.log('validation', state, city)
+		// add class required
+		if( state == '' ) stateField.parents('.form-row').addClass('required')
+		if( city == '' ) cityField.parents('.form-row').addClass('required')
+		// return false, atau e.preventDefault()
+		return false;
+	}
+	// set cookie, nilai city 30 menit
+	var date = new Date();
+	date.setTime(date.getTime() + (30 * 60 * 1000));
+	// across pages
+	$.cookie("chosen_shipping_city", city, { expires:date, path:'/' });
+})
+```
+
+------------------------- WooCommerce JNE Check Available  ------------------------------
+
+Edit [woocommerce-jne-shipping-rate]/woocommerce/class-wc-jne-rate.php
+
+change variable _chosen_shipping_city
+```php
+private $_chosen_city;
+```
+
+```php
+public function is_available( $package ) 
+{
+	global $woocommerce;
+	
+	if ( $this->enabled == "no" || 
+		 $this->availability != 'specific' || 
+		 !in_array( $package['destination']['country'], $this->countries) 
+		) 
+		return false;			
+			
+	// cart 'calculate_shipping'
+	if( isset($_POST['calc_shipping_city']) ) 
+	{	
+		$this->_chosen_city = $_POST['calc_shipping_city'];	
+		$_SESSION['_chosen_city'] = $this->_chosen_city;					
+	} 
+	// post action
+	elseif( isset($_POST['action']) ){
+		// update shipping method	
+		if( $_POST['action'] == 'woocommerce_update_shipping_method' ){	
+			$this->_chosen_city = $_SESSION['_chosen_city'];			
+		} 			
+		// checkout billing / shipping
+		elseif( $_POST['action'] == 'woocommerce_update_order_review' ) 				
+		{  		
+			if( isset($_POST['state']) )
+			{			
+				parse_str( $_POST['post_data'] );
+				
+				$chosen_state = $_POST['state'];
+				if( isset($_POST['s_state']) ){
+					$chosen_state = ( $_POST['state'] == $_POST['s_state'] ) ? $_POST['state'] : $_POST['s_state'];
+				}
+				
+				if(!isset($_SESSION['_chosen_state'])){
+					$_SESSION['_chosen_state'] = $chosen_state;	 
+					$this->_chosen_city = $_SESSION['_chosen_city'];
+				}					
+						
+				// 'chosen shipping city' berdasarkan shipping city
+				// menggunakan billing city, jika shipping city kosong ( Ship to billing address )
+				// return false, jika billing city kosong ( required )
+				if( $billing_city )
+				{
+					if( isset($_SESSION['_chosen_state']) && ($_SESSION['_chosen_state'] != $chosen_state) ) {							
+						$_SESSION['_chosen_state'] = $chosen_state;
+						$this->_chosen_city = false;
+						return false;	
+					}	
+					$this->_chosen_city = ($shipping_city) ? $shipping_city : $billing_city;
+					$_SESSION['_chosen_city'] = $this->_chosen_city;
+				}						
+			}	
+		} 
+	}	
+	// update_cart
+	else {		
+		if(!isset($_SESSION['_chosen_city'])) 
+			return false;	
+			
+		$this->_chosen_city = $_SESSION['_chosen_city'];
+	}
+	
+	return apply_filters( 'woocommerce_shipping_' . $this->id . '_is_available', true );
+} 
+```
+
+```php
+public function calculate_shipping( $package = array() )
+{				
+	global $jne;	
+	
+	//debug($this->_chosen_city,'call calculate_shipping');
+	//debug($_SESSION,'_SESSION calculate_shipping');
+	
+	if( $this->_chosen_city !== false )
+	{
+		$index_kota   = $this->_chosen_city;
+		// hitung berat
+		$total_weight = $this->calculate_weight();
+		
+		// ambil rows data
+		$data = $jne->getRows();	
+		// filter data berdasarkan index kota
+		$filtered = array_filter($data, function($rows) use($index_kota) {
+			return $rows['index'] == $index_kota;
+		});
+		
+		if( $kota = array_pop($filtered) )
+		{
+			foreach( $kota['tarif'] as $layanan => $tarif )
+			{				
+				// hitung tarif per berat item
+				$cost = $tarif * $total_weight;				
+				$rate = array(
+					'id'        => $this->id . '_' . $layanan,
+					'label'     => sprintf('%s (%s kg x %s)',
+										$this->title . ' ' . strtoupper( $layanan ),
+										$total_weight,
+										JNE_rupiah( $tarif )
+									),
+					'cost'      => $cost
+				);
+				$this->add_rate($rate);
+			}
+		}
+	}
+}
+```
+
+hapus method
+```php
+get_shipping_city
+```
+
+------------------------- WooCommerce Checkout Update Order Meta  ------------------------------
+
+Edit [woocommerce-jne-shipping-rate]/woocommerce/woocommerce-jne-shipping.php
+
+Callback woocommerce_checkout_update_order_meta (line:247)
+```php
+function woocommerce_jne_rate_checkout_field_update_order_meta( $order_id )
+{
+	global $jne;
+	
+	$city_state = get_city_state($_POST['billing_city']);
+	if ( $_POST['billing_city'] ) {
+		update_post_meta( $order_id, '_billing_city', esc_attr($city_state));
+	}
+	
+	if ( isset($_POST['shipping_city']) ) {
+		if( !empty($_POST['shipping_city']) ){
+			$city_state = get_city_state($_POST['shipping_city']);
+		}
+		update_post_meta( $order_id, '_shipping_city', esc_attr($city_state));
+	}
+}
+function get_city_state( $index )
+{
+	global $jne;
+	
+	$data = $jne->getRows();
+	$filtered = array_filter($data, function($rows) use($index) {
+		return $rows['index'] == $index;
+	});
+	
+	$_origin = null;
+	if( $filtered ){
+		$state = array_pop($filtered);
+		$_origin = JNE_normalize(sprintf('%s, %s', 
+						trim($state['kecamatan']),
+						$state['kotamadya']
+					));		
+	} else {
+		$_origin = $index;
+	}
+	
+	return $_origin;
+}
+```
+
+------------------------- WooCommerce JS  ------------------------------
+
+Edit js [woocommerce-jne-shipping-rate]/woocommerce/js/woocommerce-jne.js
+cookie path
+
+- CART
+```js
+$('select#calc_shipping_state').live('change', function(){
+	...
+	appendCombobox( provinsi, combobox_city, function(){
+		combobox_city.parent().unblock()
+		// set selected
+		var value = chosen_shipping_city
+		if( !chosen_shipping_city && jne_params.woocommerce.chosen_shipping_city ){
+			var date = new Date();
+			date.setTime(date.getTime() + (30 * 60 * 1000));
+			$.cookie("chosen_shipping_city", jne_params.woocommerce.chosen_shipping_city, { expires:date, path:'/' });
+			value = jne_params.woocommerce.chosen_shipping_city
+		}
+		console.log(value)
+		if( value ) combobox_city.val( value )
+	})
+})
+```
+
+- CHECKOUT
+```js
+$('select#billing_state, select#shipping_state').live('change', function(){
+	...
+	
+	appendCombobox( provinsi, cbCity, function(){	
+		// set value
+		var city = $.cookie("chosen_shipping_city") 
+		if( city ) cbCity.val(city)
+		// set update list
+		cbCity.chosen().trigger("liszt:updated");
+		// unblock parent
+		cbParent.unblock();
+	})
+})
+```
+
+hapus set trigger change untuk combobox shipping state
+```js
+	//if( $('select#shipping_state').length ) $('select#shipping_state').trigger('change')
+```
+
+Event Ship to Billing Address
+```js	
+	/*
+	 * Ship to billing address
+	 * 
+	 * atau pengiriman ke billing address
+	 * kosongkan combobox shipping state dan shipping city
+	 *
+	 */	 
+		   
+	$('#shiptobilling-checkbox').change(function(e){
+		if( e.target.checked )
+		{
+			// shipping state
+			$('#shipping_state').val('')
+								.chosen().trigger("liszt:updated")
+			// shipping city
+			$('#shipping_city').val('')
+							   .chosen().trigger("liszt:updated")
+						
+			var billing_city = $('select#billing_city');
+			if( billing_city.length && billing_city.val() != '' ) billing_city.trigger('change')
+		}
+	})
+})
+```
+
+======================================================================================================================		
+
+1. Install WooCommerce
+	install plugin WooCommerce
+	install WooCommerce pages
+	import dummy data
+	
+2. Appearance 
+	install theme 	  : Appearance > Themes > Install Themes (tab) > upload > Choose file > install Now > active theme
+	WooCommerce Theme : Theme Options > WooCommerce > Layout > check all
+	
+	customize widgets : Appearance > Widgets 
+		Primary : 
+			WooCommerce Price Filter
+			WooCommerce Product Categories
+			WooCommerce Recently Viewed Products
+		Footer 1 : 
+			WooCommerce Best Sellers
+			WooCommerce On-Sale
+		Footer 2 : 
+			WooCommerce Top Rated Products
+		Footer 3 : 
+			WooCommerce Recent Products
+		Footer 4 : 
+			Woo Subscribe/Connect
+			
+3. Settings
+	permalink 	: Settings > Permalinks > Post name (/%postname%/)
+	WooCoomerce Settings : WooCommerce > Settings
+		> General
+			Base Location 	  : Indonesia - DKI Jakarta
+			Currency 		      : Indonesia Rupiah (Rp)
+			Allowed Countries : Specific Countries
+				Specific Countries : Indonesia
+	
+
+4. install WooCommerce jne shipping rate
+	install plugin WooCommerce jne shipping rate
+	WooCoomerce Shipping : WooCommerce > Settings > Shipping
+		> Free Shipping 	  : 
+			Enable Free Shipping : Uncheck / Disable
+		> JNE Shipping Rate : 
+			Specific Countries : Indonesia
+		> Shipping Options
+			Shipping Methods : check radio default shipping method JNE Rate
+		
+	update tiap harga produk = * 10000
+		
+	
+SELECT * FROM `wp_options` WHERE `option_name` LIKE '%wc_ship_%'
+	

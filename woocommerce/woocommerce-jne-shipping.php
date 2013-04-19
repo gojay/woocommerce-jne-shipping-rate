@@ -139,24 +139,10 @@ function woocommerce_jne_rate_add_rupiah_currency_symbol( $currency_symbol, $cur
 	[ email ][ phone ]
  */ 
 function woocommerce_jne_rate_add_checkout_fields( $fields ) 
-{		
+{			
 	$allowed_fields = array('billing', 'shipping');
 	
 	// debug( $fields['billing'], 'original checkout fields' );
-	
-	// city field
-	$city_field = array(
-		'type' 			=> 'select',
-		'label' 		=> 'City',
-		'placeholder' 	=> 'City',
-		'required' 		=> true,
-		//'class' 		=> array('form-row-first', 'update_totals_on_change'),
-		'class' 		=> array('form-row-wide', 'update_totals_on_change'),
-		'clear' 		=> false,
-		'options'		=> array(
-			'' => __( 'Select an option', 'woocommerce' )
-		)
-	);
 	
 	// hapus billing n shipping city field
 	unset($fields['billing']['billing_city']);
@@ -217,15 +203,42 @@ function woocommerce_jne_rate_add_checkout_fields( $fields )
 				comment : line 153
 				uncomment : line 154
 			*/
+			
 			$fields[$type] = array_slice($fields[$type], 0, $offset_after_state, true) + // country, first name | last name, company, address1, address2, state(provinsi) |
-							 array($type.'_postcode' => $postcode_field) + array($type.'_city' => $city_field) + // postcode / zip, city
+							 array($type.'_postcode' => $postcode_field) + array($type.'_city' => create_city_field($type) ) + // postcode / zip, city
 							 array_slice($fields[$type], $offset_after_state, null, true); // email | phone
 		}		
 	}	
 	
-	// debug( $fields['billing'], 'customize checkout fields' );
-	
 	return $fields;
+}
+function create_city_field( $type )
+{
+	global $current_user;
+	
+	// city field
+	$field = array(
+		'type' 			=> 'select',
+		'label' 		=> 'City',
+		'placeholder' 	=> 'City',
+		'required' 		=> true,
+		//'class' 		=> array('form-row-first', 'update_totals_on_change'),
+		'class' 		=> array('form-row-wide', 'update_totals_on_change'),
+		'clear' 		=> false,
+		'options'		=> array(
+			'' => __( 'Select an option', 'woocommerce' )
+		)
+	);
+	
+	if( is_user_logged_in() )
+	{
+		$user_id = $current_user->data->ID;
+		$meta_key = ( $type == 'billing' ) ? 'billing_city' :  'shipping_city' ;
+		$index_city =  get_user_meta($user_id, $meta_key, true);
+		array_push($field['class'], $meta_key . '_' . $index_city);
+	}
+	
+	return $field;
 }
 
 /*
@@ -263,6 +276,15 @@ function woocommerce_jne_rate_checkout_field_update_order_meta( $order_id )
 		update_post_meta( $order_id, '_shipping_city', esc_attr($city_state));
 	}
 }
+/*
+ * Get city state
+ * @params
+ * 	index kota int
+ * 
+ * @return
+ * 	Kecamatan, Kotamadya String or
+ *  index kota int (if not found)
+ */
 function get_city_state( $index )
 {
 	global $jne;
@@ -272,20 +294,72 @@ function get_city_state( $index )
 		return $rows['index'] == $index;
 	});
 	
-	$_origin = null;
 	if( $filtered ){
 		$state = array_pop($filtered);
-		$_origin = JNE_normalize(sprintf('%s, %s', 
-						trim($state['kecamatan']),
-						$state['kotamadya']
-					));		
-	} else {
-		$_origin = $index;
-	}
+		return JNE_normalize(sprintf('%s, %s', 
+					trim($state['kecamatan']),
+					$state['kotamadya']
+				));		
+	} 
 	
-	return $_origin;
+	return $index;
 }
 
+/*
+ * Hook Filter woocommerce_jne_custom_calculate_shipping_for_package
+ * tambah package 'destination' 'city' untuk 'calculate shipping'
+ * 
+ * Hook filter dipanggil di [WooCommerce]/classes/class-wc-shipping.php (line:271)
+ */
+add_filter('woocommerce_jne_custom_calculate_shipping_for_package', 'custom_calculate_shipping_for_package', 10, 2);
+function custom_calculate_shipping_for_package( $package, $post_data )
+{
+	global $current_user;
+	
+	if( $post_data )
+	{
+		parse_str($post_data);
+		if( $billing_city ){
+			$package['destination']['city'] = ( $shipping_city ) ? $shipping_city : $billing_city ;
+		}
+		elseif( is_user_logged_in() )
+		{
+			$user_id = $current_user->data->ID;
+			$billing_city = get_user_meta($user_id, 'billing_city', true);
+			$shipping_city = get_user_meta($user_id, 'shipping_city', true);
+			$package['destination']['city'] = ( $shipping_city ) ? $shipping_city : $billing_city ;
+		}		
+	}
+	
+	return $package;
+}
+
+/*
+ * Hook Filter woocommerce_my_account_my_address_formatted_address
+ * ubah 'city' (nilai default index kota) menjadi nama Kecamatan, Kotamadya (dgn method 'get_city_state')
+ * pada halaman woocommerce /my-account dan my-account/edit-address/
+ *
+ * Hook filter dipanggil pd [WooCommerce]/templates/myaccount/my-address.php (line:49)
+ */
+add_filter('woocommerce_my_account_my_address_formatted_address', 'woocommerce_jne_my_account_my_address_formatted_address', 10, 2);
+function woocommerce_jne_my_account_my_address_formatted_address( $data, $customer_id )
+{
+	$data['city'] = get_city_state($data['city']);
+	return $data;
+}
+
+add_filter( 'woocommerce_billing_fields', 'custom_woocommerce_billing_fields' );
+function custom_woocommerce_billing_fields( $fields ) 
+{	
+	$fields['billing_city']	= create_city_field('billing');
+	return $fields;
+}
+add_filter( 'woocommerce_shipping_fields', 'custom_woocommerce_shipping_fields' );
+function custom_woocommerce_shipping_fields( $fields ) 
+{
+	$fields['shipping_city'] = create_city_field('shipping');
+	return $fields;
+}
 
 /*
  * edit class-wc-shipping plugin woocommerce

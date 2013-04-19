@@ -7,6 +7,8 @@
  */
 function debug( $data, $title = 'debug' )
 {
+	if( APPLICATION_ENV == 'production' ) 
+		return;
 	echo '<h1>' . strtoupper( $title ) . '</h1>';
 	echo '<pre>' . print_r( $data, 1 ) . '</pre>';
 }

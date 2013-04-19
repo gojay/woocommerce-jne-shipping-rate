@@ -212,10 +212,9 @@ class WC_JNE_Rate extends WC_Shipping_Method
 	
 	public function is_available( $package ) 
 	{
-		global $woocommerce;
+		global $woocommerce, $current_user;
 		
 		//debug($_POST,'_POST');
-		//debug($_SESSION,'_SESSION');
 		
 		if ( $this->enabled == "no" || 
 			 $this->availability != 'specific' || 
@@ -230,7 +229,8 @@ class WC_JNE_Rate extends WC_Shipping_Method
 			$_SESSION['_chosen_city'] = $this->_chosen_city;					
 		} 
 		// post action
-		elseif( isset($_POST['action']) ){
+		elseif( isset($_POST['action']) )
+		{
 			// update shipping method	
 			if( $_POST['action'] == 'woocommerce_update_shipping_method' ){	
 				$this->_chosen_city = $_SESSION['_chosen_city'];			
@@ -243,13 +243,24 @@ class WC_JNE_Rate extends WC_Shipping_Method
 					parse_str( $_POST['post_data'] );
 					
 					$chosen_state = $_POST['state'];
-					if( isset($_POST['s_state']) ){
+					if( $_POST['s_state'] ){
 						$chosen_state = ( $_POST['state'] == $_POST['s_state'] ) ? $_POST['state'] : $_POST['s_state'];
 					}
 					
-					if(!isset($_SESSION['_chosen_state'])){
+					// pertama kali
+					if( !$_SESSION['_chosen_state'] )
+					{
+						// set session state
 						$_SESSION['_chosen_state'] = $chosen_state;	 
-						$this->_chosen_city = $_SESSION['_chosen_city'];
+						if( is_user_logged_in() )
+						{
+							$user_id = $current_user->data->ID;
+							$billing_city = get_user_meta($user_id, 'billing_city', true);
+							$shipping_city = get_user_meta($user_id, 'shipping_city', true);
+							$this->_chosen_city = ( $shipping_city ) ? $shipping_city : $billing_city ;			
+						} else {
+							$this->_chosen_city = $_SESSION['_chosen_city'];
+						}
 					}					
 							
 					// 'chosen shipping city' berdasarkan shipping city
@@ -257,23 +268,22 @@ class WC_JNE_Rate extends WC_Shipping_Method
 					// return false, jika billing city kosong ( required )
 					if( $billing_city )
 					{
-						if( isset($_SESSION['_chosen_state']) && ($_SESSION['_chosen_state'] != $chosen_state) ) {							
+						if( $_SESSION['_chosen_state'] != $chosen_state ) {							
 							$_SESSION['_chosen_state'] = $chosen_state;
 							$this->_chosen_city = false;
-							return false;	
-						}	
-						$this->_chosen_city = ($shipping_city) ? $shipping_city : $billing_city;
-						$_SESSION['_chosen_city'] = $this->_chosen_city;
+						} else {
+							$this->_chosen_city = ($shipping_city) ? $shipping_city : $billing_city;
+							$_SESSION['_chosen_city'] = $this->_chosen_city;
+						}
 					}						
 				}	
 			} 
 		}	
 		// update_cart
 		else {		
-			if(!isset($_SESSION['_chosen_city'])) 
-				return false;	
-				
-			$this->_chosen_city = $_SESSION['_chosen_city'];
+			if( isset($_SESSION['_chosen_city']) ) {
+				$this->_chosen_city = $_SESSION['_chosen_city'];
+			}
 		}
 		
 		return apply_filters( 'woocommerce_shipping_' . $this->id . '_is_available', true );
@@ -282,9 +292,6 @@ class WC_JNE_Rate extends WC_Shipping_Method
 	public function calculate_shipping( $package = array() )
 	{				
 		global $jne;	
-		
-		//debug($this->_chosen_city,'call calculate_shipping');
-		//debug($_SESSION,'_SESSION calculate_shipping');
 		
 		if( $this->_chosen_city !== false )
 		{
@@ -324,7 +331,6 @@ class WC_JNE_Rate extends WC_Shipping_Method
 	 * ambil nilai index kota dari post data
 	 * @param String
 	 * @return void
-	 */
 	private function get_shipping_city( $data )
 	{
 		// Parses the string into variables
@@ -339,6 +345,7 @@ class WC_JNE_Rate extends WC_Shipping_Method
 			
 		return $_chosen_city;
 	}
+	 */
 	
 	/*
 	 * hitung berat per item

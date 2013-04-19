@@ -1,15 +1,16 @@
 jQuery(function($) {
 
 	function appendCombobox( provinsi, cb, callback ) {
+	
 		console.log('appendCombobox', 'provinsi', provinsi)
 		
 		$.getJSON( jne_params.ajaxurl,
 			{ action:'JNE-ajax', nonce:jne_params.ajaxJNENonce, get:'kota', provinsi:provinsi }, 
 			function( jsonKota ){
+			
 				console.log('appendCombobox', 'jsonKota', jsonKota)
 				
 				cb.html( '<option value="">' + woocommerce_params.i18n_select_state_text + '</option>' )
-				//cb.html( '<option value="">Select a city...</option>' )
 			
 				$.each( jsonKota.data, function (key, cat) {
 					// create group
@@ -39,9 +40,11 @@ jQuery(function($) {
 			parent_state = $(this).parents('p'),
 			combobox_city  = $('select#calc_shipping_city')
 			
-		if( jne_params.woocommerce.jne_is_enabled && 
-			( country != 'ID' || !provinsi ) )
-			return
+		if( jne_params.woocommerce.jne_is_enabled && ( country != 'ID' || !provinsi ) ) return;
+		
+		// hilangkan class required/validasi
+		var rowField = $(this).parents('.form-row');
+		if( rowField.hasClass('required') ) rowField.removeClass('required');
 		
 		// sudah ada element combobox city
 		if( combobox_city.length )
@@ -82,7 +85,7 @@ jQuery(function($) {
 		appendCombobox( provinsi, combobox_city, function(){
 			combobox_city.parent().unblock()
 			// set selected
-			var value = chosen_shipping_city
+			var value = chosen_shipping_city;
 			if( !chosen_shipping_city && jne_params.woocommerce.chosen_shipping_city ){
 				var date = new Date();
 				date.setTime(date.getTime() + (30 * 60 * 1000));
@@ -91,23 +94,57 @@ jQuery(function($) {
 			}
 			console.log(value)
 			if( value ) combobox_city.val( value )
+			// event change / aksi pilih combobox city
+			combobox_city.change(function(){
+				if( $(this).val() == '' ) return;
+				// hilangkan class required/validasi jika value tidak kosong
+				var rowField = $(this).parents('.form-row');
+				if( rowField.hasClass('required') ) rowField.removeClass('required');
+			})
+			
 		})
 	})
 	
-	// set cookie saat submit
-	$('form.shipping_calculator').submit(function(){
-		var city = $('select#calc_shipping_city').val()
-		if( city )
+	/*
+	 *
+	 * cek validasi & set cookie saat submit 'Shipping Calculator'
+	 *
+	 * @condition :
+	 * - country == ID
+	 * @validation
+	 * - state null
+	 * - city null
+	 * @return
+	 * - set cookie
+	 *
+	 */
+	$('form.shipping_calculator').submit(function(e){
+		// country
+		var country = $('select#calc_shipping_country').val();
+		// state
+		var stateField = $('select#calc_shipping_state'),
+				 state = stateField.val();
+		// city
+		var cityField = $('select#calc_shipping_city'),
+				 city = cityField.val();
+				 
+		// return jika 'country' bukan ID/indonesia
+		if( country != 'ID' ) return;
+		// cek validasi 'state' dan 'city'
+		if( state == '' || city == '' )
 		{
-			// set cookie 30 menit
-			var date = new Date();
-			date.setTime(date.getTime() + (30 * 60 * 1000));
-			// across pages
-			$.cookie("chosen_shipping_city", city, { expires:date, path:'/' });
+			console.log('validation', state, city)
+			// add class required
+			if( state == '' ) stateField.parents('.form-row').addClass('required')
+			if( city == '' ) cityField.parents('.form-row').addClass('required')
+			// return false, atau e.preventDefault()
+			return false;
 		}
-		
-		console.log('chosen_shipping_city', $.cookie("chosen_shipping_city") )
-		
+		// set cookie, nilai city 30 menit
+		var date = new Date();
+		date.setTime(date.getTime() + (30 * 60 * 1000));
+		// across pages
+		$.cookie("chosen_shipping_city", city, { expires:date, path:'/' });
 	})
 		
 	if( $('select#calc_shipping_state').length ) $('select#calc_shipping_state').trigger('change')	
@@ -119,17 +156,17 @@ jQuery(function($) {
 	
 	// aksi combobox pilih state pd checkout
 	$('select#billing_state, select#shipping_state').live('change', function(){
-		var country  	= $('#billing_country').val(),	
-			provinsi 	= $(this).val(),
-			field	 	= $(this).attr('id').split('_')[0],
+		var field	 	= $(this).attr('id').split('_')[0],
+			country  	= $('#'+ field +'_country').val(),	
+			provinsi 	= $(this).val(),			
 			cbCity 		= $('#' + field + '_city'),
-			cbParent	= cbCity.parent()
-			
+			cbParent	= cbCity.parent();
+		
 		console.log('country', country)
 		console.log('provinsi', provinsi, 'field', field)
 		console.log('cbCity', cbCity)
 		console.log('cbParent', cbParent)
-	
+		
 		if ( jne_params.woocommerce.jne_is_enabled && 
 			( country != 'ID' || !provinsi ) )
 			return
@@ -146,18 +183,51 @@ jQuery(function($) {
 		)
 		
 		appendCombobox( provinsi, cbCity, function(){	
-			// set value
-			var city = $.cookie("chosen_shipping_city") 
-			if( city ) cbCity.val(city)
-			// set update list
-			cbCity.chosen().trigger("liszt:updated");
-			// unblock parent
+		
+			// console.log('billing_city', cbCity.parents('.form-row')[0].className.match(/(\d+)/))
+			 	
+			/*
+			 * if user is logged in
+			 * woocommerce checkout sebagai user
+			 * woocommerce account dan acount edit billing address page 
+			 	url: http://{WOOCOMMERCE}/my-account/edit-address/?address=billing
+			 *
+			 */
+			var city;
+			if( jne_params.is_logged_in )
+			{						
+				// ambil index kota dari row parent (p.form-row)
+				var formRow = cbCity.parents('.form-row');	
+				// match digit (regex)
+				var match_index_city = formRow[0].className.match(/(\d+)/)
+				if( match_index_city )
+					city = match_index_city[0]
+			}
+			else {
+				city = $.cookie("chosen_shipping_city")
+			}
+			// ambil index kota dari cookie
+			cbCity.val( city )
+			/* 
+			 * check jQuery chosen plugin is loaded
+			 * set update combobox list dengan chosen
+			 */
+			if( jQuery().chosen ) cbCity.chosen().trigger("liszt:updated");
+			
+			// unblock parent/remove loading
 			cbParent.unblock();
 		})		
 	})
 	
 	if( $('select#billing_state').length ) $('select#billing_state').trigger('change')
-	//if( $('select#shipping_state').length ) $('select#shipping_state').trigger('change')
+	/* 
+	 * if user is logged in
+	 * woocommerce checkout sebagai user
+	 * lakukan trigger event change combobox shipping state
+	 * woocommerce account edit shipping address
+		url: http://{WOOCOMMERCE}/my-account/edit-address/?address=shipping
+	 */
+	if( jne_params.is_logged_in ) $('select#shipping_state').trigger('change')
 	
 	/*
 	 * Ship to billing address
@@ -170,17 +240,16 @@ jQuery(function($) {
 	$('#shiptobilling-checkbox').change(function(e){
 		if( e.target.checked )
 		{
-			var cb_ship_state = $('#shipping_state'),
-				 cb_ship_city = $('#shipping_city');
 			// shipping state
-			cb_ship_state.val('')
-						 .chosen().trigger("liszt:updated")
+			$('#shipping_state').val('')
+								.chosen().trigger("liszt:updated")
 			// shipping city
-			cb_ship_city.val('')
-						.chosen().trigger("liszt:updated")
-						
-			var billing_city = $('select#billing_city');
-			if( billing_city.length && billing_city.val() != '' ) billing_city.trigger('change')
+			$('#shipping_city').val('')
+							   .chosen().trigger("liszt:updated")
+							   
+			$('select#shipping_state').trigger('change')
+		} else {	
+			$('select#billing_city').trigger('change')
 		}
 	})
 })
