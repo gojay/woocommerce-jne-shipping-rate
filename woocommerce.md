@@ -24,6 +24,7 @@ defined('APPLICATION_ENV')
 
 ## Check Environment										 
 [woocommerce-jne-shipping-rate]]/jne-shipping-rate-functions.php
+```php
 function debug( $data, $title = 'debug' )
 {
 	if( APPLICATION_ENV == 'production' ) 
@@ -31,6 +32,7 @@ function debug( $data, $title = 'debug' )
 	echo '<h1>' . strtoupper( $title ) . '</h1>';
 	echo '<pre>' . print_r( $data, 1 ) . '</pre>';
 }
+```
 	
 # Change Log	
 
@@ -39,6 +41,7 @@ function debug( $data, $title = 'debug' )
 1. Edit WC_Shipping [WooCommerce]/classes/class-wc-shipping.php(line:271) : 
 
 - [Custom Transient] add before create package hash :
+```php
 /*
  *
  * woocommerce-jne-shipping-rate
@@ -53,17 +56,18 @@ if( isset($_POST['post_data']) )
 	}
 }
 /* end added */
+```
 
 **OR**
 
 - [Custom Transient] add before create package hash :
 
-buat package filter
+Buat package filter
 ```php
 $package = apply_filters('woocommerce_jne_custom_calculate_shipping_for_package', $package, $_POST['post_data']);	
 ```
 
-tambahkan hook filter [woocommerce-jne-shipping-rate]/woocommerce/woocommerce-jne-shipping.php
+Tambahkan hook filter [woocommerce-jne-shipping-rate]/woocommerce/woocommerce-jne-shipping.php
 ```php
 add_filter('woocommerce_jne_custom_calculate_shipping_for_package', 'custom_calculate_shipping_for_package', 10, 2);
 function custom_calculate_shipping_for_package( $package, $post_data )
@@ -83,6 +87,7 @@ function custom_calculate_shipping_for_package( $package, $post_data )
 **OR**
 
 - Without Transient
+
 ```php
 function calculate_shipping_for_package( $package = array() ) {
     if ( ! $this->enabled ) return false;
@@ -178,7 +183,7 @@ $('form.shipping_calculator').submit(function(e){
 
 Edit [woocommerce-jne-shipping-rate]/woocommerce/class-wc-jne-rate.php
 
-change variable _chosen_shipping_city
+Change variable *_chosen_shipping_city* => *_chosen_city*
 ```php
 private $_chosen_city;
 ```
@@ -292,9 +297,28 @@ public function calculate_shipping( $package = array() )
 }
 ```
 
-hapus method
+Hapus method *get_shipping_city*
+
 ```php
-get_shipping_city
+/*
+ * ambil nilai index kota dari post data
+ * @param String
+ * @return void
+private function get_shipping_city( $data )
+{
+	// Parses the string into variables
+	// http://id1.php.net/parse_str
+	parse_str( $data );
+	// 'chosen shipping city' berdasarkan shipping city
+	// menggunakan billing city, jika shipping city kosong ( Ship to billing address )
+	// return false, jika billing city kosong ( required )
+	$_chosen_city = false;
+	if( $billing_city )
+		$_chosen_city = ( $shipping_city ) ? $shipping_city : $billing_city;
+		
+	return $_chosen_city;
+}
+*/
 ```
 
 ## WooCommerce Checkout Update Order Meta
@@ -347,7 +371,7 @@ function get_city_state( $index )
 
 Edit js [woocommerce-jne-shipping-rate]/woocommerce/js/woocommerce-jne.js
 
-cookie path
+Add cookie path
 ```js
 $.cookie("chosen_shipping_city", jne_params.woocommerce.chosen_shipping_city, { expires:date, path:'/' });
 ```
@@ -373,57 +397,91 @@ $('select#calc_shipping_state').live('change', function(){
 ```
 
 - CHECKOUT
+
 ```js
 $('select#billing_state, select#shipping_state').live('change', function(){
 	...
 	
 	appendCombobox( provinsi, cbCity, function(){	
-		// set value
-		var city = $.cookie("chosen_shipping_city") 
-		if( city ) cbCity.val(city)
-		// set update list
-		cbCity.chosen().trigger("liszt:updated");
-		// unblock parent
+		
+		// console.log('billing_city', cbCity.parents('.form-row')[0].className.match(/(\d+)/))
+			
+		/*
+		 * if user is logged in
+		 * woocommerce checkout sebagai user
+		 * woocommerce account dan acount edit billing address page 
+			url: http://{WOOCOMMERCE}/my-account/edit-address/?address=billing
+		 *
+		 */
+		var city;
+		if( jne_params.is_logged_in )
+		{						
+			// ambil index kota dari row parent (p.form-row)
+			var formRow = cbCity.parents('.form-row');	
+			// match digit (regex)
+			var match_index_city = formRow[0].className.match(/(\d+)/)
+			if( match_index_city )
+				city = match_index_city[0]
+		}
+		else {
+			city = $.cookie("chosen_shipping_city")
+		}
+		// ambil index kota dari cookie
+		cbCity.val( city )
+		/* 
+		 * check jQuery chosen plugin is loaded
+		 * set update combobox list dengan chosen
+		 */
+		if( jQuery().chosen ) cbCity.chosen().trigger("liszt:updated");
+		
+		// unblock parent/remove loading
 		cbParent.unblock();
 	})
 })
 ```
 
-hapus set trigger change untuk combobox shipping state
+Trigger change combobox shipping state, jika sudah login
 ```js
-	//if( $('select#shipping_state').length ) $('select#shipping_state').trigger('change')
+/* 
+ * if user is logged in
+ * woocommerce checkout sebagai user
+ * lakukan trigger event change combobox shipping state
+ * woocommerce account edit shipping address
+	url: http://{WOOCOMMERCE}/my-account/edit-address/?address=shipping
+ */
+if( jne_params.is_logged_in ) $('select#shipping_state').trigger('change')
 ```
 
 Event Ship to Billing Address
 ```js	
-	/*
-	 * Ship to billing address
-	 * 
-	 * atau pengiriman ke billing address
-	 * kosongkan combobox shipping state dan shipping city
-	 *
-	 */	 
-		   
-	$('#shiptobilling-checkbox').change(function(e){
-		if( e.target.checked )
-		{
-			// shipping state
-			$('#shipping_state').val('')
-								.chosen().trigger("liszt:updated")
-			// shipping city
-			$('#shipping_city').val('')
-							   .chosen().trigger("liszt:updated")
-						
-			var billing_city = $('select#billing_city');
-			if( billing_city.length && billing_city.val() != '' ) billing_city.trigger('change')
-		}
-	})
+/*
+ * Ship to billing address
+ * 
+ * atau pengiriman ke billing address
+ * kosongkan combobox shipping state dan shipping city
+ *
+ */	 
+	   
+$('#shiptobilling-checkbox').change(function(e){
+	if( e.target.checked )
+	{
+		// shipping state
+		$('#shipping_state').val('')
+							.chosen().trigger("liszt:updated")
+		// shipping city
+		$('#shipping_city').val('')
+						   .chosen().trigger("liszt:updated")
+						   
+		$('select#shipping_state').trigger('change')
+	} else {	
+		$('select#billing_city').trigger('change')
+	}
 })
 ```
 
-======================================================================================================================		
+# Installation	
 
-1. Edit WC_Shipping [WooCommerce]/classes/class-wc-shipping.php(line:271) : https://github.com/gojay/woocommerce-jne-shipping-rate/blob/master/README.md#installation
+1. Install WooCommerce & Edit WC_Shipping [WooCommerce]/classes/class-wc-shipping.php(line:271) : https://github.com/gojay/woocommerce-jne-shipping-rate/blob/master/README.md#installation
 2. Install WooCommerce
 	- install plugin WooCommerce
 	- install WooCommerce pages
