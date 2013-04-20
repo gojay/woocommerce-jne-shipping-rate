@@ -1,8 +1,8 @@
 # Required
 
-PHP >= 5.3
-Wordpress 3.5.1
-WooCommerce 2.0.7
+- PHP >= 5.3
+- Wordpress 3.5.1
+- WooCommerce 2.0.7
 
 # Environment
 
@@ -41,6 +41,7 @@ function debug( $data, $title = 'debug' )
 1. Edit WC_Shipping [WooCommerce]/classes/class-wc-shipping.php(line:271) : 
 
 - [Custom Transient] add before create package hash :
+
 ```php
 /*
  *
@@ -55,7 +56,6 @@ if( isset($_POST['post_data']) )
 		$package['destination']['city'] = ( $shipping_city ) ? $shipping_city : $billing_city ;
 	}
 }
-/* end added */
 ```
 
 **OR**
@@ -119,7 +119,7 @@ function calculate_shipping_for_package( $package = array() ) {
 
 ## WooCommerce Form Validation Calculator Shipping
 
-1. Add style [woocommerce-jne-shipping-rate]/assets/css/style.css
+- Add style [woocommerce-jne-shipping-rate]/assets/css/style.css
 
 ```css
 /* woocommerce calcultor shipping validation */
@@ -133,7 +133,7 @@ function calculate_shipping_for_package( $package = array() ) {
 }
 ```
 
-2. Edit js [woocommerce-jne-shipping-rate]/woocommerce/js/woocommerce-jne.js
+- Edit js [woocommerce-jne-shipping-rate]/woocommerce/js/woocommerce-jne.js
 
 ```js
 /*
@@ -183,8 +183,8 @@ $('form.shipping_calculator').submit(function(e){
 
 Edit [woocommerce-jne-shipping-rate]/woocommerce/class-wc-jne-rate.php
 
-Change variable *_chosen_shipping_city* => *_chosen_city*
 ```php
+// change variable _chosen_shipping_city => _chosen_city
 private $_chosen_city;
 ```
 
