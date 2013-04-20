@@ -223,22 +223,25 @@ class JNE_Shipping_Rate
 		 * Localizes a script, but only if script has already been added
 		 * see more documentation at http://codex.wordpress.org/Function_Reference/wp_localize_script
 		 */
-		$woocommerce_jne_settings = get_option('woocommerce_jne_shipping_rate_settings');
-		$jne_params =  array(
-			'ajaxurl' 		=> admin_url('admin-ajax.php'),
-			'ajaxJNENonce' 	=> wp_create_nonce(self::NONCE_AJAX), // create nonce for AJAX
-			'is_jne' 		=> ( $post->post_content == '[jne]' ),
-			'woocommerce' 	=> array(
-				'jne_is_enabled' 		=> ( $woocommerce_jne_settings['enabled'] == 'yes' ),
-				'chosen_shipping_city' 	=> $_SESSION['_chosen_city']
-			)			
-		);
 		
 		if( is_user_logged_in() )
 		{
 			$user_id = $current_user->data->ID;
 			$jne_params['is_logged_in'] = true;
+			$_SESSION['_chosen_city'] = get_user_meta($user_id, 'billing_city', true);
 		}
+		
+		$woocommerce_jne_settings = get_option('woocommerce_jne_shipping_rate_settings');
+		$jne_params =  array(
+			'ajaxurl' 		=> admin_url('admin-ajax.php'),
+			'ajaxJNENonce' 	=> wp_create_nonce(self::NONCE_AJAX), // create nonce for AJAX
+			'is_jne' 		=> ( $post->post_content == '[jne]' ),
+			'is_logged_in' 	=> is_user_logged_in(),
+			'woocommerce' 	=> array(
+				'jne_is_enabled' 		=> ( $woocommerce_jne_settings['enabled'] == 'yes' ),
+				'chosen_shipping_city' 	=> $_SESSION['_chosen_city']
+			)			
+		);
 		
 		wp_localize_script( 'jne-ajax', 'jne_params', $jne_params );
 	}
