@@ -214,7 +214,7 @@ class WC_JNE_Rate extends WC_Shipping_Method
 	{
 		global $woocommerce, $current_user;
 		
-		//debug($_POST,'_POST');
+		//jne_rate_debug($_POST,'_POST');
 		
 		if ( $this->enabled == "no" || 
 			 $this->availability != 'specific' || 

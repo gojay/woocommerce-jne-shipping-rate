@@ -142,7 +142,7 @@ function woocommerce_jne_rate_add_checkout_fields( $fields )
 {			
 	$allowed_fields = array('billing', 'shipping');
 	
-	// debug( $fields['billing'], 'original checkout fields' );
+	// jne_rate_debug( $fields['billing'], 'original checkout fields' );
 	
 	// hapus billing n shipping city field
 	unset($fields['billing']['billing_city']);

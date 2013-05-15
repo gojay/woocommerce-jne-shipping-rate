@@ -5,7 +5,7 @@
  * @param String
  * @return String
  */
-function debug( $data, $title = 'debug' )
+function jne_rate_debug( $data, $title = 'debug' )
 {
 	if( APPLICATION_ENV == 'production' ) 
 		return;
