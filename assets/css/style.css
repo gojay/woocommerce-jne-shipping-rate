@@ -9,20 +9,20 @@
     margin-left: -390px; /* - width/2 */
 }
 
-.group { display:inline; margin: 0px 10px }
+#jne .group { display:inline; margin: 0px 10px }
 
-.pagination { margin-top: 5px !important }
+#jne .pagination { margin-top: 5px !important }
 
-.hide {
+#jne .hide {
 	display: none;
 }
-.hidden {
+#jne .hidden {
 	visibility: hidden;
 }
-.textcenter{
+#jne .textcenter{
 	text-align: center !important; 
 }
-.rowcenter {
+#jne .rowcenter {
 	vertical-align: middle !important;
 	text-align: center !important;
 }
@@ -49,14 +49,18 @@
 		
 /* widget jne style */
 
-.widget-jne {
+.bootstrap .widget-jne {
 		margin-top: 10px; 
 	}
-	.widget-jne a {
+	.bootstrap .widget-jne a {
 
 	}
-	.widget-jne a:hover {
+	.bootstrap .widget-jne a:hover {
 
+	}
+	
+	.widget-jne .form-search input[type="text"] {
+		height: 30px;
 	}
 	
 /* end widget jne style */
