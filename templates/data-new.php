@@ -6,14 +6,14 @@ $offset  	= (int) $_GET['offset'];
 /* pagination options */
 $paging = array(
 	'offset'	=> $offset,
-	'limit'		=> ( $limit ) ? $limit : $jne_settings['display'],
-	'total'		=> count( $data ),
+	'limit'		=> ( $limit ) ? $limit : 100,
+	'total'		=> count( $rows ),
 	'page'		=> 0,
 	'pages'		=> 1
 );	
 
 /* 
- * buat bari table JNE (semua)
+ * buat bari table JNE 
  * definisikan index awal dan akhir
  * index awal = offset
  * index akhir = index awal + limit
@@ -24,7 +24,7 @@ $until = $x + $paging['limit'];
 while( $x <= $until ) 
 {		
 	/* baris data sesuai index */
-	if( $row = $data[$x] )
+	if( $row = $rows[$x] )
 	{
 		$first = array_shift(array_keys($row['tarif'])); // ambil array key elemen pertama
 		$count = count($row['tarif']);					 // jumlah data tarif
@@ -36,10 +36,12 @@ while( $x <= $until )
 			{
 				$output .= '
 					<tr>
-						<td rowspan="'. $count .'" class="row-center">' . sprintf( '%s, %s', $row['provinsi']['nama'], $row['kotamadya'] ) . '</td>
+						<td rowspan="'. $count .'" class="row-center">' . $row['provinsi'] . '</td>
+						<td rowspan="'. $count .'" class="row-center">' . JNE_normalize( $row['kota'] ) . '</td>
 						<td rowspan="'. $count .'" class="row-center">' . JNE_normalize( $row['kecamatan'] ) . '</td>
 						<td class="text-center">' . strtoupper( $layanan ) . '</td>
-						<td class="text-center">' . JNE_rupiah( $tarif ) . '</td>
+						<td class="text-center">' . JNE_rupiah( $tarif['harga'] ) . '</td>
+						<td class="text-center">' . $tarif['etd'] . '</td>
 					</tr>';		
 			} 
 			else
@@ -47,7 +49,8 @@ while( $x <= $until )
 				$output .= '
 					<tr>
 						<td class="text-center">' . strtoupper( $layanan ) . '</td>
-						<td class="text-center">' . JNE_rupiah( $tarif ) . '</td>
+						<td class="text-center">' . JNE_rupiah( $tarif['harga'] ) . '</td>
+						<td class="text-center">' . $tarif['etd'] . '</td>
 					</tr>';
 			}
 		}
@@ -60,7 +63,7 @@ while( $x <= $until )
 $paging['pages'] = ceil($paging['total'] / $paging['limit']);
 $paging['page']  = intval( $paging['offset']/$paging['limit'] ) + 1;
 // output pagination numbers
-$anchor = JNE_pagination($paging, 5);
+$anchor = JNE_pagination($paging, 10);
 
-include('table-data.php');
+include('table-data-new.php');
 

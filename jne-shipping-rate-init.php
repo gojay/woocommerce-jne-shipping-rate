@@ -67,6 +67,15 @@ class JNE_Shipping_Rate
 			&$this,
 			'ajax_handler'
 		));
+		// ajax JNE 2 (new)
+		add_action('wp_ajax_nopriv_jne-new-ajax', array(
+			&$this,
+			'ajax_new_handler'
+		));
+		add_action('wp_ajax_jne-new-ajax', array(
+			&$this,
+			'ajax_new_handler'
+		));
 	}
 	
 	/* installation required */
@@ -90,7 +99,7 @@ class JNE_Shipping_Rate
 	 */
 	public function display_page()
 	{		
-		include( JNE_PLUGIN_TPL_DIR . '/page.php');		
+		include( JNE_PLUGIN_TPL_DIR . '/page-new.php');		
 	}
 	
 	/**
@@ -215,7 +224,11 @@ class JNE_Shipping_Rate
 		));
 		
 		// ajax
-		wp_enqueue_script('jne-ajax', JNE_PLUGIN_ASSET_URL . '/js/ajax.js', array(
+		/*wp_enqueue_script('jne-ajax', JNE_PLUGIN_ASSET_URL . '/js/ajax.js', array(
+			'jquery'
+		));*/
+		// new
+		wp_enqueue_script('jne-new-ajax', JNE_PLUGIN_ASSET_URL . '/js/ajax-new.js', array(
 			'jquery'
 		));
 		
@@ -243,7 +256,136 @@ class JNE_Shipping_Rate
 			)			
 		);
 		
-		wp_localize_script( 'jne-ajax', 'jne_params', $jne_params );
+		// wp_localize_script( 'jne-ajax', 'jne_params', $jne_params );
+		wp_localize_script( 'jne-new-ajax', 'jne_params', $jne_params );
+	}
+
+	public function ajax_new_handler()
+	{
+		global $jne;
+		
+		$jne_settings = get_option('jne_settings');		
+		// nonce
+		$nonce = $_GET['nonce'];
+		
+		// if don't have nonce, set error
+		if ( !wp_verify_nonce($nonce, self::NONCE_AJAX) )
+			die('error');
+
+		$get = $_GET['get'];
+		switch( $get ){
+			/* @return JSON */	
+			case 'provinsi':
+				$provinsi = JNE_sortProvinsi( $jne->getProvinsi() );
+				header('content-type', 'application/json');
+				echo json_encode( $provinsi );
+				break;
+				
+			/* @return JSON */	
+			case 'kota':	
+				$provinsi = $_GET['provinsi'];
+				if( $provinsi )
+				{
+					if($kota = $jne->getKota( $provinsi )){
+						$data = array_map(function($d){
+							return array_pop(array_intersect_key($d, array_flip(array('name'))));
+						}, $kota);
+						$response = array( 'data' => $data );
+					} 
+					else {
+						$response = array( 
+							'error' => true, 
+							'message' => 'kota tidak ditemukan' 
+						);
+					}				
+				}
+				else
+					$response = array( 
+						'error' => true, 
+						'message' => 'provinsi kosong' 
+					);	
+					
+				header('content-type', 'application/json');
+				echo json_encode( $response );
+				break;
+			
+			/* @return String html */		
+			case 'pagination':
+			case 'index':
+				$data = $jne->getData();
+				
+				$index_kota = $_GET['index_kota'];
+				$index_provinsi = $_GET['index_provinsi'];
+				
+				/* filter data berdasarkan provinsi */
+				if( isset($index_provinsi) )
+				{
+					$code = $data[$index_provinsi]['k_code'];
+					$byProvinsi = array_filter($data, function($d) use($code){
+						return preg_match('/\b'. $code .'\b/i', $d['k_code']);
+					});
+
+					$rows = array();
+					foreach( $byProvinsi as $filter )
+						$rows[] = $filter;
+				}
+				/* filter data berdasarkan kota */
+				else if( isset($index_kota) )
+				{				
+					$kota = $data[$index_kota]['kota'];
+					$byProvinsi = array_filter($data, function($d) use($kota){
+						return preg_match('/\b'. $kota .'\b/i', $d['kota']);
+					});
+
+					$rows = array();
+					foreach( $byProvinsi as $filter )
+						$rows[] = $filter;
+				}
+				/* tampilkan semua */
+				else {
+					$rows = JNE_sortAll( $data );
+				}
+					
+				include( JNE_PLUGIN_TPL_DIR . '/data-new.php' );
+				break;
+				
+			/* @return String html */
+			case 'show_tracking_in_modal':
+				include 'includes/html-dom/simple_html_dom.php';
+				
+				$awb = $_GET['awb'];	
+				
+				if (!function_exists("curl_init"))
+				{
+					die('Aktifkan ekstensi CURL pada PHP anda...');
+				}
+						
+				$chp = curl_init();   
+				curl_setopt($chp, CURLOPT_USERAGENT, $_SERVER['HTTP_USER_AGENT']); 
+				curl_setopt($chp, CURLOPT_FOLLOWLOCATION, 1);
+				curl_setopt($chp, CURLOPT_RETURNTRANSFER, 1);    
+
+				$url = "http://jne.co.id/index.php?mib=tracking.detail&awb=".$awb;
+				curl_setopt($chp, CURLOPT_URL, $url);
+				curl_setopt($chp, CURLOPT_REFERER, "http://www.jne.co.id/index.php");
+				curl_setopt($chp, CURLOPT_URL, $url);
+				curl_setopt($chp, CURLOPT_CONNECTTIMEOUT,0); 
+				curl_setopt($chp, CURLOPT_TIMEOUT, 400); //timeout in seconds
+				$content = curl_exec($chp);
+
+				$html = str_get_html($content);
+				echo $html->find('td.content', 2)->innertext;
+						
+				curl_close($chp);
+				break;
+				
+			/* @return String html */	
+			case 'show_jne_in_modal':
+				include( JNE_PLUGIN_TPL_DIR . '/page-modal-new.php');
+				break;
+		} 
+		
+		exit;
 	}
 	
 	/* 

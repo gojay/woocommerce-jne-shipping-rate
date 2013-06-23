@@ -25,13 +25,13 @@
 	<?php if( $show_jne ) : ?>
 		<p><a href="#taxModal" role="button" class="btn-link" data-toggle="modal">Lihat daftar tarif JNE</a></p>
 		<!-- Modal TAX -->
-		<div id="taxModal" class="modal large hide fade" tabindex="-1" role="dialog" aria-labelledby="taxModalLabel" aria-hidden="true">
+		<div id="taxModal" class="modal modal-large hide fade" tabindex="-1" role="dialog" aria-labelledby="taxModalLabel" aria-hidden="true">
 			<div class="modal-header">
 				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">x</button>
 				<h3 id="taxModalLabel" class="textcenter">Daftar tarif JNE</h3>
 			</div>
 			<div class="modal-body">
-				<img src="<?php echo JNE_PLUGIN_ASSET_URL . '/img/loader-bar.gif' ?>" class="aligncenter" style="border:0" />
+				<p class="text-center">Pengambilan data...</p>
 			</div>
 			<div class="modal-footer">
 				<button class="btn" data-dismiss="modal">Close</button>

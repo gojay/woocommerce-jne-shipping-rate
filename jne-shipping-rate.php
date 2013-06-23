@@ -84,7 +84,8 @@ if ( ! defined( 'JNE_PLUGIN_WOO_URL' ) )
 
 include 'jne-shipping-rate-functions.php';
 include 'jne-shipping-rate-init.php';
-include 'includes/class-parse-jne.php';	
+// include 'includes/class-parse-jne.php'; 
+include 'includes/class-parse-jne2.php';	
 
 if( class_exists('JNE_Shipping_Rate') )
 {
@@ -100,7 +101,12 @@ if( class_exists('JNE_Shipping_Rate') )
 /*
  * add woocommerce shipping method
  */
-include 'woocommerce/woocommerce-jne-shipping.php';
+// include 'woocommerce/woocommerce-jne-shipping.php';
 
 // Global variable jne
-$GLOBALS['jne'] = new Parse_JNE( 'Jakarta.xls' );
+// $GLOBALS['jne'] = new Parse_JNE( 'Jakarta.xls' );
+$Parse_JNE2 = new Parse_JNE2();
+$Parse_JNE2->filename = '04-2013';
+$Parse_JNE2->start = 5;
+$Parse_JNE2->populate();
+$GLOBALS['jne'] = $Parse_JNE2;

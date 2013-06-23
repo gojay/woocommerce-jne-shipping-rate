@@ -152,3 +152,108 @@ function JNE_normalize( $data )
 	$data['text'] = ucwords( strtolower( $data['text'] ) );
 	return $data;
 }
+
+/*
+ * in array recursive
+ * http://stackoverflow.com/questions/4128323/in-array-and-multidimensional-array#answer-4128377
+ * 
+ * example :
+ * $b = array(array("Mac", "NT"), array("Irix", "Linux"));
+ * echo in_array_r("Irix", $b) ? 'found' : 'not found';
+ */
+function in_array_r($needle, $haystack, $strict = false)
+{
+    foreach ($haystack as $item) {
+        if (($strict ? $item === $needle : $item == $needle) || (is_array($item) && in_array_r($needle, $item, $strict))) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+/*
+ * urutan provinsi dari barat
+ */
+$orderProvinsi = array(
+	'Aceh', 
+	'Sumatera Utara', 
+	'Bengkulu',
+	'Jambi',
+	'Riau',
+	'Sumatera Barat',
+	'Sumatera Selatan',
+	'Lampung',
+	'Bangka Belitung',
+	'Kepulauan Riau',
+	'Banten',
+	'Jakarta',
+	'Jawa Barat',
+	'Jawa Tengah',
+	'Jawa Timur',
+	'Yogyakarta',
+	'Bali',
+	'Kalimantan Barat',
+	'Kalimantan Selatan',
+	'Kalimantan Tengah',
+	'Kalimantan Timur',
+	'Kalimantan Utara',
+	'Gorontalo',
+	'Nusa Tenggara Barat',
+	'Nusa Tenggara Timur',
+	'Sumatera Barat',
+	'Sumatera Selatan',
+	'Sumatera Tengah',
+	'Sumatera Timur',
+	'Sumatera Utara',
+	'Maluku',
+	'Papua Barat',
+	'Papua'
+);
+
+/*
+ * urut provinsi berdasar urutan provinsi
+ * preg_match boundary 'provinsi' insensitive
+ * 
+ * @return
+ * 	values array(key, value)
+ */
+function JNE_sortProvinsi($array) 
+{
+	global $orderProvinsi;
+
+    $ordered = array();
+    foreach($orderProvinsi as $key) {
+    	foreach($array as $index => $val ){
+	    	if(preg_match('/\b'.$key.'\b/i', $val)) {
+	    		$ordered[] = array(
+	    			'key' => $index,
+	    			'value'  => $array[$index]
+    			);
+	    	}    		
+    	}
+    }
+    return $ordered;
+}
+
+/*
+ * urut data berdasar urutan provinsi
+ * preg_match boundary 'provinsi' insensitive
+ * 
+ * @return
+ * 	values array
+ */
+function JNE_sortAll($array) 
+{
+	global $orderProvinsi;
+
+    $ordered = array();
+    foreach($orderProvinsi as $key) {
+    	foreach($array as $index => $val ){
+	    	if(preg_match('/\b'.$key.'\b/i', $val['provinsi'])) {
+	    		$ordered[] = $array[$index];
+	    	}    		
+    	}
+    }
+    return $ordered;
+}

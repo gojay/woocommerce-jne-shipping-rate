@@ -1,6 +1,6 @@
 <?php
-include 'spreadsheet/OLERead.php';
-include 'spreadsheet/reader.php';
+include_once 'spreadsheet/OLERead.php';
+include_once 'spreadsheet/reader.php';
 
 class Parse_JNE
 {

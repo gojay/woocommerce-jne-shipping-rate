@@ -4,25 +4,34 @@
 	margin-bottom: 0;
 }
 
-.modal.large{
-    width: 780px;
-    margin-left: -390px; /* - width/2 */
+.bootstrap.widget-jne >.modal-large{
+   width:940px;
+   margin-left:-470px;
 }
 
-#jne .group { display:inline; margin: 0px 10px }
+.bootstrap h1,
+.bootstrap h2,
+.bootstrap h3,
+.bootstrap h4,
+.bootstrap h5,
+.bootstrap table th {
+	border-top: 0;
+	border-bottom: 0;
+}
+.bootstrap .group { display:inline; margin: 0px 10px }
 
-#jne .pagination { margin-top: 5px !important }
+.bootstrap .pagination { margin-top: 5px !important }
 
-#jne .hide {
+.bootstrap .hide {
 	display: none;
 }
-#jne .hidden {
+.bootstrap .hidden {
 	visibility: hidden;
 }
-#jne .textcenter{
+.bootstrap .text-center{
 	text-align: center !important; 
 }
-#jne .rowcenter {
+.bootstrap .row-center {
 	vertical-align: middle !important;
 	text-align: center !important;
 }
@@ -34,16 +43,16 @@
 	color: #333333;	
 }
 
-#jne form { 
+.bootstrap form { 
 	margin-top: 10px; 
 	}
-	#jne table { 
+	.bootstrap table { 
 		margin-bottom: 10px; 
 		}
-		#jne table th { 
+		.bootstrap table th { 
 			font-size: 10pt; 
 		}
-		#jne table td { 
+		.bootstrap table td { 
 			font-size: 8pt; 
 		}
 		
