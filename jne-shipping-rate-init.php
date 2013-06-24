@@ -99,6 +99,38 @@ class JNE_Shipping_Rate
 	 */
 	public function display_page()
 	{		
+		global $jne;
+/*
+		$data = $jne->getData();
+		// jne_rate_debug($data);
+
+		$index_provinsi = 649;
+
+		$code = $data[$index_provinsi]['k_code'];
+		$rows = array_filter($data, function($d) use($code){
+			return preg_match('/\b'. $code .'\b/i', $d['k_code']);
+		});
+
+		$data = array();
+		foreach( $rows as $index => $row ){
+			$data[$row['kota']][] = array(
+				'index' => $index,
+				'name'  => $row['kecamatan']
+			);
+		}
+
+		jne_rate_debug($data);
+*/
+		$provinces = JNE_sortProvinsi( $jne->getProvinces() );
+
+		/* filter data provinsi berdasarkan provinsi2 yg dipilih pada jne settings */
+		if( $allowed = $jne_settings['provinces'] )
+		{
+			$provinces = array_filter( $provinces, function($prov) use($allowed){
+				return in_array( $prov['key'], $allowed );
+			});
+		}
+		// jne_rate_debug($provinces);
 		include( JNE_PLUGIN_TPL_DIR . '/page-new.php');		
 	}
 	
@@ -276,34 +308,50 @@ class JNE_Shipping_Rate
 		switch( $get ){
 			/* @return JSON */	
 			case 'provinsi':
-				$provinsi = JNE_sortProvinsi( $jne->getProvinsi() );
+				$provinces = JNE_sortProvinsi( $jne->getProvinces() );
 				header('content-type', 'application/json');
-				echo json_encode( $provinsi );
+				echo json_encode( $provinces );
 				break;
 				
 			/* @return JSON */	
 			case 'kota':	
 				$provinsi = $_GET['provinsi'];
+				$group    = (isset($_GET['group'])) ? $_GET['group'] : false ;
 				if( $provinsi )
 				{
-					if($kota = $jne->getKota( $provinsi )){
+					if( $group )
+					{
+						$populate = $jne->getData();
+
+						$code = $populate[$provinsi]['k_code'];
+						$rows = array_filter($populate, function($d) use($code){
+							return preg_match('/\b'. $code .'\b/i', $d['k_code']);
+						});
+
+						$data = array();
+						foreach( $rows as $index => $row ){
+							$data[$row['kota']][] = array(
+								'index' => $index,
+								'name'  => $row['kecamatan']
+							);
+						}	
+						$response = array( 'data' => $data );
+					}
+					else {
+						$kota = $jne->getCities( $provinsi );
 						$data = array_map(function($d){
 							return array_pop(array_intersect_key($d, array_flip(array('name'))));
 						}, $kota);
 						$response = array( 'data' => $data );
-					} 
-					else {
-						$response = array( 
-							'error' => true, 
-							'message' => 'kota tidak ditemukan' 
-						);
-					}				
+					}
+							
 				}
-				else
+				else {
 					$response = array( 
 						'error' => true, 
 						'message' => 'provinsi kosong' 
 					);	
+				}
 					
 				header('content-type', 'application/json');
 				echo json_encode( $response );

@@ -11,7 +11,8 @@ add_action('plugins_loaded', 'woocommerce_jne_rate_init', 0);
 function woocommerce_jne_rate_init()
 {
 	// include woocommerce jne rate shipping method
-	include 'class-wc-jne-rate.php';
+	// include 'class-wc-jne-rate.php';
+	include 'class-wc-jne-rate-new.php';
 		
 	// http://wcdocs.woothemes.com/codex/extending/shipping-method-api
 	add_filter( 'woocommerce_shipping_methods', 'woocommerce_jne_rate_add_method' );					
@@ -59,7 +60,7 @@ function woocommerce_jne_rate_scripts()
 		array( 'jquery' )
 	);
 	wp_enqueue_script('woocommerce-jne', 
-		JNE_PLUGIN_WOO_URL . '/js/woocommerce-jne.js', 
+		JNE_PLUGIN_WOO_URL . '/js/woocommerce-jne-new.js', 
 		array( 'jquery' )
 	);
 }
@@ -71,7 +72,7 @@ function woocommerce_jne_rate_add_provinces( $states )
 {
 	global $jne;
 	
-	$provinces = $jne->getProvinces();
+	$provinces = JNE_sortProvinsi( $jne->getProvinces() );
 	
 	// get jne shipping options
 	$jne_settings   = get_option( 'woocommerce_jne_rates' );					
@@ -79,14 +80,14 @@ function woocommerce_jne_rate_add_provinces( $states )
 	if( $allowed = $jne_settings['provinces'] )
 	{
 		$provinces = array_filter( $provinces, function($provinsi) use($allowed){
-			return in_array( $provinsi['value'], $allowed );
+			return in_array( $provinsi['key'], $allowed );
 		});
 	}
 	
 	$stateID = array();
 	foreach( $provinces as $provinsi )
 	{
-		$stateID[$provinsi['value']] = $provinsi['text'];
+		$stateID[$provinsi['key']] = $provinsi['value'];
 	}
 	
 	$states['ID'] = $stateID;

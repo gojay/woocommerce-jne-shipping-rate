@@ -166,7 +166,7 @@ class Parse_JNE2
 		return $this->_data;
 	}
 
-	public function getProvinsi()
+	public function getProvinces()
 	{
 		$this->_provinces = array_unique(
 			array_map(function($k){
@@ -181,7 +181,7 @@ class Parse_JNE2
 		return $this->_provinces;
 	}
 
-	public function getKota( $index )
+	public function getCities( $index )
 	{
 		$code = $this->_data[$index]['k_code'];
 		$kota = array_filter($this->_data, function($data) use($code) {
@@ -215,7 +215,7 @@ class Parse_JNE2
 		return $_kota;
 	}
 
-	public function getTarif( $index )
+	public function getTax( $index )
 	{
 		return $this->_data[$index]['tarif'];
 	}
