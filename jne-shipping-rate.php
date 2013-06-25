@@ -101,7 +101,7 @@ if( class_exists('JNE_Shipping_Rate') )
 /*
  * add woocommerce shipping method
  */
-include 'woocommerce/woocommerce-jne-shipping.php';
+include 'woocommerce/woocommerce-jne-shipping-new.php';
 
 // Global variable jne
 // $GLOBALS['jne'] = new Parse_JNE( 'Jakarta.xls' );

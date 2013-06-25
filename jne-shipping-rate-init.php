@@ -121,16 +121,8 @@ class JNE_Shipping_Rate
 
 		jne_rate_debug($data);
 */
-		$provinces = JNE_sortProvinsi( $jne->getProvinces() );
-
-		/* filter data provinsi berdasarkan provinsi2 yg dipilih pada jne settings */
-		if( $allowed = $jne_settings['provinces'] )
-		{
-			$provinces = array_filter( $provinces, function($prov) use($allowed){
-				return in_array( $prov['key'], $allowed );
-			});
-		}
-		// jne_rate_debug($provinces);
+		$data = $jne->getData();
+		jne_rate_debug($data[649]);
 		include( JNE_PLUGIN_TPL_DIR . '/page-new.php');		
 	}
 	
@@ -170,6 +162,8 @@ class JNE_Shipping_Rate
 		
 		// get provinces
 		$provinsi = $jne->getProvinces();
+
+		jne_rate_debug($provinsi);
 		
 		// action save
 		if ('save' == $_REQUEST['action']) 
@@ -194,7 +188,10 @@ class JNE_Shipping_Rate
 			<h2>JNE Settings</h2>
 			
 			<!-- settings template -->
-			<?php include( JNE_PLUGIN_TPL_DIR . '/settings.php'); ?>
+			<?php 
+			// include( JNE_PLUGIN_TPL_DIR . '/settings.php'); 
+			include( JNE_PLUGIN_TPL_DIR . '/settings-new.php'); 
+			?>
 			
 		</div>
 		<?php
@@ -599,3 +596,4 @@ class JNE_Shipping_Rate
 	}
 	
 }
+?>

@@ -412,17 +412,24 @@ Event Ship to Billing Address
 1. Install WooCommerce
 	install plugin WooCommerce
 	install WooCommerce pages
-	import dummy data
+	[import dummy data woocommerce]
+	File dummy data : [woocommerce plugin directory] > dummy_data.xml
+	Import : tools > import > WordPress > Choose File > dummy_data.xml
+	update tiap harga produk woocommerce (rupiah) = * 10000
 	
-2. Appearance 
-	install theme 	  : Appearance > Themes > Install Themes (tab) > upload > Choose file > install Now > active theme
-	WooCommerce Theme : Theme Options > WooCommerce > Layout > check all
+2. Appearance
+	[install theme]
+	Theme mystile (theme dari woocommerce) download di https://dl.dropboxusercontent.com/u/110272111/mystile.zip
+	[Theme] : Appearance > Themes > Install Themes (tab) > upload > Choose file (mystile) > install Now > active theme
+	[WooCommerce Theme] : Theme Options > WooCommerce > Layout > check all
 	
+	[Widgets] : install widgets (optional). Jjika anda ingin menampilkan JNE tracking code sebagai widget, tambahkan kedalam Primary Widget
 	customize widgets : Appearance > Widgets 
 		Primary : 
 			WooCommerce Price Filter
 			WooCommerce Product Categories
 			WooCommerce Recently Viewed Products
+			JNE Express Across Nation
 		Footer 1 : 
 			WooCommerce Best Sellers
 			WooCommerce On-Sale
@@ -434,18 +441,17 @@ Event Ship to Billing Address
 			Woo Subscribe/Connect
 			
 3. Settings
-	permalink 	: Settings > Permalinks > Post name (/%postname%/)
-	WooCoomerce Settings : WooCommerce > Settings
+	[permalink] : Settings > Permalinks > Post name (/%postname%/)
+	[WooCoomerce Settings] : WooCommerce > Settings
 		> General
 			Base Location 	  : Indonesia - DKI Jakarta
-			Currency 		      : Indonesia Rupiah (Rp)
+			Currency 		  : Indonesia Rupiah (Rp)
 			Allowed Countries : Specific Countries
 				Specific Countries : Indonesia
 	
 
 4. install WooCommerce jne shipping rate
-	install plugin WooCommerce jne shipping rate
-	WooCoomerce Shipping : WooCommerce > Settings > Shipping
+	[WooCoomerce Shipping] : WooCommerce > Settings > Shipping
 		> Free Shipping 	  : 
 			Enable Free Shipping : Uncheck / Disable
 		> JNE Shipping Rate : 

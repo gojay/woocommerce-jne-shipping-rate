@@ -97,7 +97,9 @@ class WC_JNE_Rate extends WC_Shipping_Method
 	
 	public function admin_options() 
 	{
-		global $woocommerce, $jne;		
+		global $woocommerce, $jne;
+
+		$provinsi = $jne->getProvinces();
 		?>
 		<h3><?php echo $this->admin_page_heading; ?></h3>
 		<p><?php echo $this->admin_page_description; ?></p>
@@ -124,22 +126,21 @@ class WC_JNE_Rate extends WC_Shipping_Method
 					<p>
 						<label>
 							<input type="checkbox" id="select-all-provinces"
-							<?php echo ( count($this->jne_settings['provinces']) ) ? 'checked' : '' ; ?>/> <?php _e( 'Select all', 'woocommerce' ) ?>
+							<?php echo ( count($this->jne_settings['provinces']) == 0 ) ? 'checked' : '' ; ?>/> <?php _e( 'Select all', 'woocommerce' ) ?>
 						</label>
 					</p>
 					
 					<div class="jne-setting-provinces">
 					<?php 
 					$i = 1; 
-					$provinsi = $jne->getProvinces();
-					foreach( $provinsi as $prov ) : 
+					foreach( $provinsi as $index => $prov ) : 
 						$checked = ( $allowed = $this->jne_settings['provinces'] ) 
-										? (in_array( $prov['key'], $allowed ) ? 'checked' : '')
+										? (in_array( $index, $allowed ) ? 'checked' : '')
 										: 'checked' ;
 						?>
 						<label>
-							<input type="checkbox" name="jne_provinsi[]" value="<?php echo $prov['key'] ?>" class="cb-provinsi"
-							<?php echo $checked;  ?> /> <?php echo $prov['value'] ?> 
+							<input type="checkbox" name="jne_provinsi[]" value="<?php echo $index ?>" class="cb-provinsi"
+							<?php echo $checked;  ?> /> <?php echo $prov ?> 
 						</label>
 						<?php if( ($i % 10) == 0 ) : ?>
 						</div>
@@ -198,8 +199,11 @@ class WC_JNE_Rate extends WC_Shipping_Method
 	
 	public function process_jne_shipping_rate()
 	{
+		global $jne;
+
 		if ('save' == $_POST['action']) 
 		{
+			$provinsi  = $jne->getProvinces();
 			$provinces = $_POST['jne_provinsi'];
 			$settings = array(
 				'display' => $_POST['jne_display'],

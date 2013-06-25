@@ -4,21 +4,56 @@
 http://gojayincode.com/wordpress-plugin-jne-part-3-woocommerce/
 
 ## Installation
-1. Install Plugin woocommerce, JNE shipping Rate (1.1) dan WordPress Importer(untuk import dummy data dari woocommerce). Import data woocommerce([woocommerce_plugin] > dummy_data.xml) : tools > import > WordPress > Choose File > dummy_data.xml
+1. **Install WooCommerce** 
+	+ install plugin WooCommerce
+	+ install WooCommerce pages
+	+ [import dummy data]
+		- File dummy data : [woocommerce plugin directory] > dummy_data.xml
+		- Import : tools > import > WordPress > Choose File > dummy_data.xml
+		- update tiap harga produk woocommerce (rupiah) = * 10000
+	
+2. **Appearance**
+	+ [install theme]
+		- Theme mystile (theme dari woocommerce) download [disini](https://dl.dropboxusercontent.com/u/110272111/mystile.zip)
+		- Install : Appearance > Themes > Install Themes (tab) > upload > Choose file (mystile) > install Now > active theme
+	+ [WooCommerce Theme] : Theme Options > WooCommerce > Layout > check all
+	
+	+ [Widgets] : install widgets (optional). Jjika anda ingin menampilkan JNE tracking code sebagai widget, tambahkan kedalam Primary Widget
+		- customize widgets : Appearance > Widgets 
+			+ Primary : 
+				- WooCommerce Price Filter
+				- WooCommerce Product Categories
+				- WooCommerce Recently Viewed Products
+				- JNE Express Across Nation
+			+ Footer 1 : 
+				- WooCommerce Best Sellers
+				- WooCommerce On-Sale
+			+ Footer 2 : 
+				- WooCommerce Top Rated Products
+			+ Footer 3 : 
+				- WooCommerce Recent Products
+			+ Footer 4 : 
+				- Woo Subscribe/Connect
+			
+3. **Settings** 
+	+ [permalink] : Settings > Permalinks > Post name (/%postname%/)
+	+ [WooCoomerce Settings] : WooCommerce > Settings
+		- General
+			- Base Location 	  : Indonesia - DKI Jakarta
+			- Currency 		  : Indonesia Rupiah (Rp)
+			- Allowed Countries   : Specific Countries > Indonesia
+	
 
-2. Edit Product Woocommerce Edit product (dummy) WordPress dengan mengganti harga dan beratnya. (ambil contoh product 1up dan Barbie Fashion)
+4. **install WooCommerce jne shipping rate** 
+	+ [WooCoomerce Shipping] : WooCommerce > Settings > Shipping
+		- Free Shipping (optional) : Disable Free Shipping (Uncheck)
+		- JNE Shipping Rate :  Specific Countries > Indonesia
+		- Shipping Options 
+			- Shipping Methods : check shipping method JNE Rate (default)
 
-3. Edit Setting WooCommerce general Edit setting general Woocommerce (Woocommerce > Settings > General): Ganti format currency dan allowed countries
+5. **Edit WC_Shipping** 
 
-4. Edit Setting WooCommerce shipping method Edit setting shipping options Woccommerce (Woocommerce > Settings > General > Shipping > Shipping Options) : aktifkan JNE shipping method
-
-5. Edit Setting WooCommerce shipping JNE shipping rate 
-
-6. Edit setting shipping method JNE Shipping Rate Woccommerce (Woocommerce > Settings > General > Shipping > JNE Shipping Rate) : setting JNE Shipping Rate
-
-7. Edit WC_Shipping [WooCommerce]/classes/class-wc-shipping.php(line:271) : 
-		
-'calculate_shipping_for_package'
+File : [WooCommerce]/classes/class-wc-shipping.php(line:271)
 
 ```php
 function calculate_shipping_for_package( $package = array() ) {
