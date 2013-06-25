@@ -17,7 +17,6 @@ http://gojayincode.com/wordpress-plugin-jne-part-3-woocommerce/
 		- Theme mystile (theme dari woocommerce) download [disini](https://dl.dropboxusercontent.com/u/110272111/mystile.zip)
 		- Install : Appearance > Themes > Install Themes (tab) > upload > Choose file (mystile) > install Now > active theme
 	+ [WooCommerce Theme] : Theme Options > WooCommerce > Layout > check all
-	
 	+ [Widgets] : install widgets (optional). Jjika anda ingin menampilkan JNE tracking code sebagai widget, tambahkan kedalam Primary Widget
 		- customize widgets : Appearance > Widgets 
 			+ Primary : 
