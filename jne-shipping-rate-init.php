@@ -100,29 +100,7 @@ class JNE_Shipping_Rate
 	public function display_page()
 	{		
 		global $jne;
-/*
-		$data = $jne->getData();
-		// jne_rate_debug($data);
-
-		$index_provinsi = 649;
-
-		$code = $data[$index_provinsi]['k_code'];
-		$rows = array_filter($data, function($d) use($code){
-			return preg_match('/\b'. $code .'\b/i', $d['k_code']);
-		});
-
-		$data = array();
-		foreach( $rows as $index => $row ){
-			$data[$row['kota']][] = array(
-				'index' => $index,
-				'name'  => $row['kecamatan']
-			);
-		}
-
-		jne_rate_debug($data);
-*/
-		$data = $jne->getData();
-		jne_rate_debug($data[649]);
+		
 		include( JNE_PLUGIN_TPL_DIR . '/page-new.php');		
 	}
 	

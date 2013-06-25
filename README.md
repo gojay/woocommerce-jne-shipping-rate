@@ -6,7 +6,8 @@ http://gojayincode.com/wordpress-plugin-jne-part-3-woocommerce/
 ## Installation
 1. **Install WooCommerce** 
 	+ install plugin WooCommerce
-	+ install WooCommerce pages
+	+ Create WooCommerce page
+	+ Create JNE Page : pages > Add new > isi content nya adalah [jne]
 	+ [import dummy data]
 		- File dummy data : [woocommerce plugin directory] > dummy_data.xml
 		- Import : tools > import > WordPress > Choose File > dummy_data.xml
