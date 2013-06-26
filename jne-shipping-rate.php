@@ -15,7 +15,7 @@ define( 'JNE_REQUIRED_WP_VERSION', '3.0' );
 defined('APPLICATION_ENV')
     || define('APPLICATION_ENV',
               (getenv('APPLICATION_ENV') ? getenv('APPLICATION_ENV')
-                                         : 'production'));
+                                         : 'development'));
 
 /**
  * set debug mode

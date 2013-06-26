@@ -159,7 +159,17 @@ class WC_JNE_Rate extends WC_Shipping_Method
 					<span class="description"> <?php _e( 'Masukkan berat \'default\' (dalam desimal) jika  berat produk adalah kosong atau nol', 'woocommerce' ) ?> </span>
 				</th>
 				<td>
-					<input name="jne_weight" type="text" id="jne_display" class="small-text" value="<?php echo $this->jne_settings['weight'] ?>" placeholder="1.00"> 
+					<input name="jne_weight" type="text" class="small-text" value="<?php echo $this->jne_settings['weight'] ?>" placeholder="1.00"> 
+				</td>
+			</tr>
+			<!-- toleransi -->
+			<tr valign="top">
+				<th scope="row" class="titledesc">
+					<label for="jne_tolerance"> <?php _e( 'Tolerance', 'woocommerce' ) ?> </label><br/>
+					<span class="description"> <?php _e( 'Masukkan nilai toleransi JNE', 'woocommerce' ) ?> </span>
+				</th>
+				<td>
+					<input name="jne_tolerance" type="text" class="small-text" value="<?php echo $this->jne_settings['tolerance'] ?>" placeholder="0.00"> 
 				</td>
 			</tr>
 		</table><!--/.form-table-->
@@ -208,7 +218,8 @@ class WC_JNE_Rate extends WC_Shipping_Method
 			$settings = array(
 				'display' => $_POST['jne_display'],
 				'provinces' => ( count($provinces) == count($provinsi) ) ? array() : $provinces,
-				'weight' => $_POST['jne_weight']
+				'weight' => $_POST['jne_weight'],
+				'tolerance' => $_POST['jne_tolerance']
 			);
 			
 			update_option( $this->jne_shipping_rate_option, $settings);	
@@ -217,9 +228,7 @@ class WC_JNE_Rate extends WC_Shipping_Method
 	
 	public function is_available( $package ) 
 	{
-		global $woocommerce, $current_user;
-		
-		//jne_rate_debug($_POST,'_POST');
+		global $woocommerce, $current_user, $jne;
 		
 		if ( $this->enabled == "no" || 
 			 $this->availability != 'specific' || 
@@ -290,19 +299,18 @@ class WC_JNE_Rate extends WC_Shipping_Method
 				$this->_chosen_city = $_SESSION['_chosen_city'];
 			}
 		}
-		
+
 		return apply_filters( 'woocommerce_shipping_' . $this->id . '_is_available', true );
 	} 
 	
 	public function calculate_shipping( $package = array() )
 	{				
-		global $jne;	
+		global $woocommerce, $jne;	
 		
-		if( $this->_chosen_city !== false )
+		if( $this->_chosen_city !== false && (sizeof($woocommerce->cart->cart_contents) > 0) )
 		{
-			$index_kota   = $this->_chosen_city;
-			// hitung berat
-			$total_weight = $this->_calculate_weight();
+			$index_kota = $this->_chosen_city;
+			$carts = $woocommerce->cart->cart_contents;
 			
 			if( $taxes = $jne->getTax( $index_kota ) )
 			{
@@ -310,7 +318,9 @@ class WC_JNE_Rate extends WC_Shipping_Method
 				{				
 					// hitung tarif per berat item
 					$harga = $tarif['harga'];
-					$cost  = $harga * $total_weight;				
+					$total_weight = $this->_calculate_weight( $carts, $harga );
+					$cost  = $harga * $total_weight;
+
 					$rate  = array(
 						'id'        => $this->id . '_' . $layanan,
 						'label'     => sprintf('%s (%s kg x %s)',
@@ -327,44 +337,37 @@ class WC_JNE_Rate extends WC_Shipping_Method
 	}
 	
 	/*
-	 * ambil nilai index kota dari post data
-	 * @param String
-	 * @return void
-	private function get_shipping_city( $data )
-	{
-		// Parses the string into variables
-		// http://id1.php.net/parse_str
-		parse_str( $data );
-		// 'chosen shipping city' berdasarkan shipping city
-		// menggunakan billing city, jika shipping city kosong ( Ship to billing address )
-		// return false, jika billing city kosong ( required )
-		$_chosen_city = false;
-		if( $billing_city )
-			$_chosen_city = ( $shipping_city ) ? $shipping_city : $billing_city;
-			
-		return $_chosen_city;
-	}
-	 */
-	
-	/*
 	 * hitung berat per item
+	 * jika memiliki dimensi, nilai berat adalah perhitungan volumetrik [(LxWxH / tarif) * berat]. lihat di http://www.jne.co.id/index.php?mib=produk.detail&id=2008081110202009
 	 * jika berat kosong / nol, ambil nilai default dari setting
-	 * jumlah berat adalah pembulatan
+	 * jumlah berat adalah pembulatan dgn toleransi
 	 * @return int
 	 */
-	private function _calculate_weight()
+	private function _calculate_weight( $carts, $harga = 0 )
 	{
-		global $woocommerce;
-		
-		if ( sizeof($woocommerce->cart->cart_contents) > 0 )
+		$total_weight = 0;
+
+		foreach( $carts as $cart_product )
 		{
-			foreach( $woocommerce->cart->cart_contents as $cart_product )
-			{
-				$weight = ( $cart_product['data']->weight ) ? $cart_product['data']->weight : $this->jne_settings['weight'] ;
-				$total_weight += $weight * $cart_product['quantity'];
-			}
+			$product = $cart_product['data'];
+			$weight = ( $product->weight ) ? $product->weight : $this->jne_settings['weight'] ;
+			// volumetrik
+			if( $product->length && $product->width && $product->height ) {
+				$volume = $product->length * $product->width * $product->height;
+				$weight = ($volume / $harga) * $weight;				
+			} 
+			
+			$weight = $weight * $cart_product['quantity'];
+			$weights += $weight;
 		}
 		
-		return ceil( $total_weight );
+		if($weights > 1) {
+			$tolerance = $this->jne_settings['tolerance'];
+			$diff = $weights - floor($weights);
+			$total_weight = $diff > $tolerance ? ceil($weights) : floor($weights);
+		} 
+		else $total_weight = 1;
+
+		return $total_weight;
 	}	
 } 		

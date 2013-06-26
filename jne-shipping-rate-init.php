@@ -86,7 +86,8 @@ class JNE_Shipping_Rate
 			$settings = array(
 				'display' => 200,
 				'provinces' => array(),
-				'weight' => '1.00'
+				'weight' => '1.00',
+				'tolerance' => 0.3
 			);
 			add_option('jne_settings', $settings, '', 'yes');
 		}
