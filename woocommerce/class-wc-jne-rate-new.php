@@ -254,32 +254,25 @@ class WC_JNE_Rate extends WC_Shipping_Method
 			{  		
 				if( isset($_POST['state']) )
 				{			
+					/* 
+					 * parse string post data kedalam variable (ajax woocommerce)
+					 * contoh :
+					 * post_data => billing_country=ID&billing_first_name=Jhon&billing_last_name=Doe&....
+					 * $billing_country = ID
+					 * $billing_first_name = Jhon
+					 * $billing_last_name = Doe
+					 */
 					parse_str( $_POST['post_data'] );
-					
-					$chosen_state = $_POST['state'];
-					if( $_POST['s_state'] ){
-						$chosen_state = ( $_POST['state'] == $_POST['s_state'] ) ? $_POST['state'] : $_POST['s_state'];
-					}
-					
-					// pertama kali
-					if( !$_SESSION['_chosen_state'] )
-					{
-						// set session state
-						$_SESSION['_chosen_state'] = $chosen_state;	 
-						if( is_user_logged_in() )
-						{
-							$user_id = $current_user->data->ID;
-							$billing_city = get_user_meta($user_id, 'billing_city', true);
-							$shipping_city = get_user_meta($user_id, 'shipping_city', true);
-							$this->_chosen_city = ( $shipping_city ) ? $shipping_city : $billing_city ;			
-						} else {
-							$this->_chosen_city = $_SESSION['_chosen_city'];
-						}
-					}					
-							
-					// 'chosen shipping city' berdasarkan shipping city
-					// menggunakan billing city, jika shipping city kosong ( Ship to billing address )
-					// return false, jika billing city kosong ( required )
+
+					/**
+					 * aksi pilih/update kota pd checkout
+					 *
+					 * menggunakan billing city, jika shipping city kosong ( Ship to billing address )
+					 *
+					 * return false, jika billing city kosong ( required ), 
+					 * artinya tidak ada paket layanan JNE yg tersedia
+					 *
+					 */
 					if( $billing_city )
 					{
 						if( $_SESSION['_chosen_state'] != $chosen_state ) {							
@@ -288,6 +281,48 @@ class WC_JNE_Rate extends WC_Shipping_Method
 						} else {
 							$this->_chosen_city = ($shipping_city) ? $shipping_city : $billing_city;
 							$_SESSION['_chosen_city'] = $this->_chosen_city;
+						}
+					} 
+					else {
+
+						/**
+						 * tidak ada aksi pemilihan kota
+						 *  
+						 * 1. perpindahan cart -> checkout
+						 * 2. menuju halaman checkout 
+						 * 3. refresh halaman checkout
+						 */
+
+						/* 
+						 * define provinsi
+						 * jika shipping state tidak null,
+						 * provinsi adalah shipping state
+						 */
+						$chosen_state = ( $_POST['s_state'] ) ? $_POST['state'] : $_POST['s_state'];
+					
+						/* 
+						 * untuk pertama kalinya, set kedalanm SESSION 
+						 * set provinsi
+						 * set kota
+						 */
+						if( !$_SESSION['_chosen_state'] )
+						{
+							// set session state
+							$_SESSION['_chosen_state'] = $chosen_state;
+							// jika user adalah member, set pilihan kota dari account details
+							if( is_user_logged_in() )
+							{
+								$user_id = $current_user->data->ID;
+								$billing_city = get_user_meta($user_id, 'billing_city', true);
+								$shipping_city = get_user_meta($user_id, 'shipping_city', true);
+								$this->_chosen_city = ( $shipping_city ) ? $shipping_city : $billing_city ;	
+							} else {
+								// jika tamu, set pilihan kota dari session
+								$this->_chosen_city = $_SESSION['_chosen_city'];
+							}
+						}	
+						else {
+							$this->_chosen_city = $chosen_state;
 						}
 					}						
 				}	

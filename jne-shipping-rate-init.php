@@ -271,6 +271,8 @@ class JNE_Shipping_Rate
 	public function ajax_new_handler()
 	{
 		global $jne;
+
+		header("HTTP/1.1 200 OK");
 		
 		$jne_settings = get_option('jne_settings');		
 		// nonce
@@ -409,7 +411,7 @@ class JNE_Shipping_Rate
 				break;
 		} 
 		
-		exit;
+		die();
 	}
 	
 	/* 
@@ -571,8 +573,7 @@ class JNE_Shipping_Rate
 				break;
 		} 
 		
-		exit;
+		die();
 	}
 	
 }
-?>

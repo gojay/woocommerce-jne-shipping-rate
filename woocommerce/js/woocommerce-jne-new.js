@@ -170,11 +170,6 @@ jQuery(function($) {
 			cbCity = $('#' + field + '_city'),
 			cbParent = cbCity.parent();
 
-		console.log('country', country);
-		console.log('provinsi', provinsi, 'field', field);
-		console.log('cbCity', cbCity);
-		console.log('cbParent', cbParent);
-
 		if (jne_params.woocommerce.jne_is_enabled &&
 			(country != 'ID' || !provinsi))
 			return;
@@ -198,7 +193,7 @@ jQuery(function($) {
 			 * if user is logged in
 			 * woocommerce checkout sebagai user
 			 * woocommerce account dan acount edit billing address page 
-			 	url: http://{WOOCOMMERCE}/my-account/edit-address/?address=billing
+			 * url: http://{WOOCOMMERCE}/my-account/edit-address/?address=billing
 			 *
 			 */
 			var city;
@@ -210,7 +205,11 @@ jQuery(function($) {
 				if (match_index_city)
 					city = match_index_city[0];
 			} else {
-				city = $.cookie("chosen_shipping_city");
+				// ambil nilai kota dari cookie,
+				// jika null, ambil dari session (jne_params woocommerce)
+				var chosen_shipping_city = $.cookie("chosen_shipping_city");
+				city = (chosen_shipping_city) ? chosen_shipping_city : jne_params.woocommerce.chosen_shipping_city;
+				console.log('chosen_shipping_city', city);
 			}
 			// ambil index kota dari cookie
 			cbCity.val(city);

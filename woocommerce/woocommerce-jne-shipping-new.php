@@ -165,28 +165,6 @@ function woocommerce_jne_rate_add_checkout_fields( $fields )
 			// nilai offset state field
 			$offset_state = array_search($type.'_state', array_keys($fields[$type]));
 			$offset_after_state  = $offset_state + 1;
-									 
-			/* 
-			 * atur posisi fields
-				country
-				first name | last name
-				company
-				address1
-				address2
-				state(provinsi)
-				city | postcode / zip
-				email | phone
-				
-			 * pd variable $city_field 
-				comment : line 154
-				uncomment : line 153
-			 
-			// ubah class state
-			$fields[$type][$type.'_state']['class'] = array('form-row-wide');
-			$fields[$type] = array_slice($fields[$type], 0, $offset_after_state, true) + // country, first name | last name, company, address1, address2, state(provinsi)
-							 array($type.'_city' => $city_field) + array($type.'_postcode' => $postcode_field) + // city | postcode / zip
-							 array_slice($fields[$type], $offset_after_state, null, true); // email | phone
-			*/
 							 
 			/* 
 			 * atur posisi fields
