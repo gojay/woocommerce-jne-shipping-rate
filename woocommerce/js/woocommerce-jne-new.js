@@ -89,16 +89,17 @@ jQuery(function($) {
 			combobox_city.parent().unblock();
 			// set selected
 			var value = chosen_shipping_city;
-			if (!chosen_shipping_city && jne_params.woocommerce.chosen_shipping_city) {
+			var s_city = jne_params.woocommerce.chosen_shipping_city;
+			if (chosen_shipping_city !== s_city) {
 				var date = new Date();
 				date.setTime(date.getTime() + (30 * 60 * 1000));
-				$.cookie("chosen_shipping_city", jne_params.woocommerce.chosen_shipping_city, {
+				$.cookie("chosen_shipping_city", s_city, {
 					expires: date,
 					path: '/'
 				});
-				value = jne_params.woocommerce.chosen_shipping_city;
+				value = s_city;
 			}
-			console.log(value);
+			console.log('city', value);
 			if (value) combobox_city.val(value);
 				// event change / aksi pilih combobox city
 			combobox_city.change(function() {
@@ -208,8 +209,8 @@ jQuery(function($) {
 				// ambil nilai kota dari cookie,
 				// jika null, ambil dari session (jne_params woocommerce)
 				var chosen_shipping_city = $.cookie("chosen_shipping_city");
-				city = (chosen_shipping_city) ? chosen_shipping_city : jne_params.woocommerce.chosen_shipping_city;
-				console.log('chosen_shipping_city', city);
+				city = (jne_params.woocommerce.chosen_shipping_city) ? jne_params.woocommerce.chosen_shipping_city : chosen_shipping_city ;
+				console.log('city', city);
 			}
 			// ambil index kota dari cookie
 			cbCity.val(city);

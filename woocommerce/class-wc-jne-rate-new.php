@@ -229,7 +229,7 @@ class WC_JNE_Rate extends WC_Shipping_Method
 	public function is_available( $package ) 
 	{
 		global $woocommerce, $current_user, $jne;
-		
+
 		if ( $this->enabled == "no" || 
 			 $this->availability != 'specific' || 
 			 !in_array( $package['destination']['country'], $this->countries) 
@@ -353,7 +353,7 @@ class WC_JNE_Rate extends WC_Shipping_Method
 				{				
 					// hitung tarif per berat item
 					$harga = $tarif['harga'];
-					$total_weight = $this->_calculate_weight( $carts, $harga );
+					$total_weight = $this->_calculate_weight( $carts );
 					$cost  = $harga * $total_weight;
 
 					$rate  = array(
@@ -373,29 +373,38 @@ class WC_JNE_Rate extends WC_Shipping_Method
 	
 	/*
 	 * hitung berat per item
-	 * jika memiliki dimensi, nilai berat adalah perhitungan volumetrik [(LxWxH / tarif) * berat]. lihat di http://www.jne.co.id/index.php?mib=produk.detail&id=2008081110202009
+	 * jika memiliki dimensi, nilai berat adalah perhitungan volumetrik [(LxWxH / 6000) * berat]. 
+	 	Apabila hitungan volumetrik lebih berat dari berat aktual, maka biaya kirim dihitung berdasarkan berat volumetrik.
+	 	lihat di http://www.jne.co.id/index.php?mib=produk.detail&id=2008081110202009
 	 * jika berat kosong / nol, ambil nilai default dari setting
 	 * jumlah berat adalah pembulatan dgn toleransi
 	 * @return int
 	 */
-	private function _calculate_weight( $carts, $harga = 0 )
+	private function _calculate_weight( $carts )
 	{
 		$total_weight = 0;
 
 		foreach( $carts as $cart_product )
 		{
 			$product = $cart_product['data'];
+			// jika berat kosong (null), berat default diambil dari nilai berat setting JNE
 			$weight = ( $product->weight ) ? $product->weight : $this->jne_settings['weight'] ;
-			// volumetrik
+			// memiliki volume
 			if( $product->length && $product->width && $product->height ) {
+				// hitung volume
 				$volume = $product->length * $product->width * $product->height;
-				$weight = ($volume / $harga) * $weight;				
+				// hitung volumetrik
+				$volumetik = ($volume / 6000) * $weight;
+				// Apabila hitungan volumetrik lebih berat dari berat aktual, maka biaya kirim dihitung berdasarkan berat volumetrik.
+				$weight = ($volumetik > $weight) ? $volumetik : $weight ;
 			} 
-			
+			// hitung berat per kuantitas
 			$weight = $weight * $cart_product['quantity'];
+			// increase
 			$weights += $weight;
 		}
 		
+		// prehitungan toleransi
 		if($weights > 1) {
 			$tolerance = $this->jne_settings['tolerance'];
 			$diff = $weights - floor($weights);

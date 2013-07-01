@@ -1,13 +1,29 @@
-# Wordpress Plugin WooCommerce JNE Shipping Method 
+# Wordpress Plugin WooCommerce JNE Shipping Method (v.2.1)
 
 ## Tutorial
 http://gojayincode.com/wordpress-plugin-jne-part-3-woocommerce/
+
+## Changelog
+1. Update perhitungan ulang volumetrik (class-wc-jne-rate-new.php)
+	- sumber http://www.jne.co.id/index.php?mib=produk.detail&id=2008081110202009
+	- Apabila hitungan volumetrik lebih berat dari berat aktual, maka biaya kirim dihitung berdasarkan berat volumetrik. (line:383) [tolong dicek, jika salah perhitungan :)]
+
+2. Update Logic JNE Package untuk checkout (class-wc-jne-rate-new.php & woocommerce-jne-new.js)
+	- woocommerce update order review (line:253)
+	- fix set pemilihan combobox city, lebih diutamakn berdasarkan session, bukan cookies (javascript)
+
+## Add Features
+1. Update harga JNE (April 2013) Jakarta
+2. Setting nilai toleransi JNE
+3. Perhitungan volumetrik (jika produk di memiliki dimensi)
 
 ## Installation
 1. **Install WooCommerce** 
 	+ install plugin WooCommerce
 	+ Create WooCommerce page
 	+ Create JNE Page : pages > Add new > isi content nya adalah [jne]
+		+ template : full width (optional)
+		+ uncheck  : allow comments (optional)
 	+ [import dummy data]
 		- File dummy data : [woocommerce plugin directory] > dummy_data.xml
 		- Import : tools > import > WordPress > Choose File > dummy_data.xml
