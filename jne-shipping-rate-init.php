@@ -351,7 +351,7 @@ class JNE_Shipping_Rate
 						 */
 						$provinsi = $populate[$provinsi]['provinsi'];
 						$rows = array_filter($populate, function($d) use($provinsi){
-							return preg_match('/\b'. $provinsi .'\b/i', $d['provinsi']);
+							return preg_match('/\b'. $provinsi .'\b/', $d['provinsi']);
 						});
 
 						$data = array();

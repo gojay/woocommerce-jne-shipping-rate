@@ -188,7 +188,7 @@ class Parse_JNE2
 	{
 		$provinsi = $this->_data[$index]['provinsi'];
 		$kota = array_filter($this->_data, function($data) use($provinsi) {
-			return preg_match('/\b'. $provinsi .'\b/i', $data['provinsi']);
+			return preg_match('/\b'. $provinsi .'\b/', $data['provinsi']);
 		});	
 		
 		$_kota = array();

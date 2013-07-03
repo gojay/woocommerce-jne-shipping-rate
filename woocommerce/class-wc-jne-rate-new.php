@@ -453,6 +453,7 @@ class WC_JNE_Rate extends WC_Shipping_Method
 				'total_weight' => $total_weight
 			));
 			*/
+		
 			$this->_tooltip_content .= '<tr class="row-jne-weight-tolerance"><td class="col-1 text-right">Tolerance</td><td class="col-2">:</td><td class="col-3">'.$tolerance.' kg</td></tr>';
 		} 
 		else $total_weight = 1;
