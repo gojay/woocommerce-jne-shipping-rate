@@ -10,7 +10,7 @@ http://gojayincode.com/wordpress-plugin-jne-part-3-woocommerce/
 + Perhitungan Berat Volumetrik (jika produk di memiliki dimensi)
 + Tracking JNE
 + Daftar Tarif JNE
-+ Tooltip berat detail pada menu Cart (v.2.2)
++ Tooltip berat detail pada menu Cart (v.2.2) (update tooltip style di assets/css/style.css:100)
 
 ## Installation
 1. **Install WooCommerce** 
