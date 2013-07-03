@@ -15,6 +15,10 @@ session_start();
 class WC_JNE_Rate extends WC_Shipping_Method 
 {
 	private $_chosen_city;
+
+	/* tooltip content (weight details) */
+	private $_show_tooltip = true;
+	private $_tooltip_content;
 	
 	public function __construct()
 	{		
@@ -245,6 +249,9 @@ class WC_JNE_Rate extends WC_Shipping_Method
 		// post action
 		elseif( isset($_POST['action']) )
 		{
+			// tidak tampil d checkout
+			$this->_show_tooltip = false;
+
 			// update shipping method	
 			if( $_POST['action'] == 'woocommerce_update_shipping_method' ){	
 				$this->_chosen_city = $_SESSION['_chosen_city'];			
@@ -347,25 +354,31 @@ class WC_JNE_Rate extends WC_Shipping_Method
 			$index_kota = $this->_chosen_city;
 			$carts = $woocommerce->cart->cart_contents;
 			
+			// hitung berat total
+			$total_weight = $this->_calculate_weight( $carts );
+			
 			if( $taxes = $jne->getTax( $index_kota ) )
 			{
 				foreach( $taxes as $layanan => $tarif )
 				{				
 					// hitung tarif per berat item
 					$harga = $tarif['harga'];
-					$total_weight = $this->_calculate_weight( $carts );
 					$cost  = $harga * $total_weight;
-
+					// daftarkan tarif
 					$rate  = array(
-						'id'        => $this->id . '_' . $layanan,
-						'label'     => sprintf('%s (%s kg x %s)',
-											$this->title . ' ' . strtoupper( $layanan ),
-											$total_weight,
-											JNE_rupiah( $harga )
-										),
-						'cost'      => $cost
+						'id'    => $this->id . '_' . $layanan,
+						'label' => sprintf('%s (<a href="#shipping_method" class="btn btn-success tooltip-jne-weight" rel="popover" data-content="It\'s so simple to create a tooltop for my website!" data-original-title="Twitter Bootstrap Popover">%s kg</a> x %s)',
+										$this->title . ' ' . strtoupper( $layanan ),
+										$total_weight,
+										JNE_rupiah( $harga )
+									),
+						'cost'  => $cost
 					);
 					$this->add_rate($rate);
+				}
+				// print tooltip content
+				if( $this->_show_tooltip ){
+					echo '<div id="weight-details" style="display:none;"><table class="jne-weight-content">'. $this->_tooltip_content .'</table></div>';
 				}
 			}
 		}
@@ -389,6 +402,8 @@ class WC_JNE_Rate extends WC_Shipping_Method
 			$product = $cart_product['data'];
 			// jika berat kosong (null), berat default diambil dari nilai berat setting JNE
 			$weight = ( $product->weight ) ? $product->weight : $this->jne_settings['weight'] ;
+			// detai content 
+			$content = '<tr class="row-jne-weight-data"><td class="col-1">'. $product->post->post_title;
 			// memiliki volume
 			if( $product->length && $product->width && $product->height ) {
 				// hitung volume
@@ -397,21 +412,72 @@ class WC_JNE_Rate extends WC_Shipping_Method
 				$volumetik = ($volume / 6000) * $weight;
 				// Apabila hitungan volumetrik lebih berat dari berat aktual, maka biaya kirim dihitung berdasarkan berat volumetrik.
 				$weight = ($volumetik > $weight) ? $volumetik : $weight ;
+				// detai content 
+				$content .= sprintf(' (%sx%sx%s)', $product->length, $product->width, $product->height);
 			} 
+			// detai content 
+			$content .= '</td><td class="col-2">:</td><td class="col-3">'. $this->_floor_dec($weight).' kg</td></tr>';
+
 			// hitung berat per kuantitas
 			$weight = $weight * $cart_product['quantity'];
 			// increase
 			$weights += $weight;
+
+			// set detai content 
+			$this->_tooltip_content .= $content;
 		}
 		
 		// prehitungan toleransi
 		if($weights > 1) {
 			$tolerance = $this->jne_settings['tolerance'];
-			$diff = $weights - floor($weights);
-			$total_weight = $diff > $tolerance ? ceil($weights) : floor($weights);
+			$_weights = $this->_floor_dec($weights);
+			$intval = intval($weights);
+			$diff = $_weights - $intval;
+			$total_weight = $diff >= $tolerance ? ceil($weights) : $intval;
+			
+			/* uncomment this for debugging
+			jne_rate_debug(array(
+				'weights' => array(
+					'default' => $weights,
+					'precision' => $_weights
+				),
+				'fraction' => array(
+					'up' => ceil($weights),
+					'down' => $intval
+				),
+				'diff' => array(
+					'default' => $weights - $intval,
+					'precision' => $diff
+				),
+				'tolerance' => $tolerance,
+				'total_weight' => $total_weight
+			));
+			*/
+		
+			$this->_tooltip_content .= '<tr class="row-jne-weight-tolerance"><td class="col-1 text-right">Tolerance</td><td class="col-2">:</td><td class="col-3">'.$tolerance.' kg</td></tr>';
 		} 
 		else $total_weight = 1;
+			
+		$this->_tooltip_content .= '<tr class="row-jne-weight-total"><td class="col-1 text-right">Total</td><td class="col-2">:</td><td class="col-3">'.$total_weight.' kg</td></tr>';
 
 		return $total_weight;
 	}	
+
+	/**
+	 * Floor decimal numbers with precision
+	 * issue : http://floating-point-gui.de/basic/
+	 * source : http://id1.php.net/manual/en/function.floor.php#108371
+	 */
+	private function _floor_dec($number, $precision = 1, $separator = '.')
+	{
+	    $numberpart=explode($separator,$number);
+	    $numberpart[1]=substr_replace($numberpart[1],$separator,$precision,0);
+	    if($numberpart[0]>=0)
+	    {$numberpart[1]=floor($numberpart[1]);}
+	    else
+	    {$numberpart[1]=ceil($numberpart[1]);}
+
+	    $ceil_number= array($numberpart[0],$numberpart[1]);
+	    return implode($separator,$ceil_number);
+	}
 } 		

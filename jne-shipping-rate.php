@@ -3,7 +3,7 @@
 Plugin Name: WooCommerce JNE Shipping Rate
 Plugin URI: http://codex.wordpress.org
 Description: Menampilkan daftar ongkos pengiriman JNE
-Version: 2.1
+Version: 2.2
 Author: Dani Gojay
 Author URI: http://gojayincode.com
 License: GPL2

@@ -1,21 +1,16 @@
-# Wordpress Plugin WooCommerce JNE Shipping Method (v.2.1)
+# Wordpress Plugin WooCommerce JNE Shipping Method (v.2.2)
 
 ## Tutorial
 http://gojayincode.com/wordpress-plugin-jne-part-3-woocommerce/
 
-## Changelog
-1. Update perhitungan ulang volumetrik (class-wc-jne-rate-new.php)
-	- sumber http://www.jne.co.id/index.php?mib=produk.detail&id=2008081110202009
-	- Apabila hitungan volumetrik lebih berat dari berat aktual, maka biaya kirim dihitung berdasarkan berat volumetrik. (line:383) [tolong dicek, jika salah perhitungan :)]
-
-2. Update Logic JNE Package untuk checkout (class-wc-jne-rate-new.php & woocommerce-jne-new.js)
-	- woocommerce update order review (line:253)
-	- fix set pemilihan combobox city, lebih diutamakn berdasarkan session, bukan cookies (javascript)
-
-## Add Features
-1. Update harga JNE (April 2013) Jakarta
-2. Setting nilai toleransi JNE
-3. Perhitungan volumetrik (jika produk di memiliki dimensi)
+## Features:
++ WordPress 3.5 Ready
++ WooCommerce 2.0.+ Ready
++ Harga JNE Jakarta, Available
++ Perhitungan Berat Volumetrik (jika produk di memiliki dimensi)
++ Tracking JNE
++ Daftar Tarif JNE
++ Tooltip berat detail pada menu Cart (v.2.2)
 
 ## Installation
 1. **Install WooCommerce** 
@@ -97,4 +92,42 @@ function calculate_shipping_for_package( $package = array() ) {
 	}
 	return $package;
 }
+```
+
+## ChangeLog (Update History):
+	
+1. Version 1.0.1 (Apr 16, 2013)
+	+ Initial First Release
+2. Version 2.0 (Apr 18, 2013)
+	+ support wp.3.5.1 & woocommerce 2.0.7
+3. Version 2.1 (Jun 24, 2013)
+	+ NEW – Setting input field untuk Nilai Toleransi JNE
+	+ NEW – Perhitungan Berat Volumetrik (See ref: http://www.jne.co.id/index.php?mib=produk.detail&id=2008081110202009 )
+	+ Update – Harga JNE (April 2013) Jakarta
+	+ Update – Added support for WooCommerce 2.0
+	+ TWEAK – Perhitungan ulang volumetrik (class-wc-jne-rate-new.php)
+	+ TWEAK – JNE Package re-build untuk Checkout (class-wc-jne-rate-new.php & woocommerce-jne-new.js)
+	+ FIX – Set pemilihan combobox city, lebih diutamakan berdasarkan session, bukan cookies (javascript)
+4. Version 2.2 (Jul 03, 2013)
+	+ NEW - Tooltip berat detail pada menu Cart
+	+ FIX - populasi kota
+	+ TWEAK - perhitungan ulang toleransi
+
+## Note
+Untuk pengembangan gunakan method [jne_rate_debug](https://github.com/gojay/woocommerce-jne-shipping-rate/blob/master/jne-shipping-rate-functions.php). Kemudian aktifkan/set environtment **APPLICATION_ENV** dengan value **development**
+
+contoh pada .htaccess wordpress
+```
+SetEnv APPLICATION_ENV development
+
+# BEGIN WordPress
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteBase /
+RewriteRule ^index\.php$ - [L]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule . /index.php [L]
+</IfModule>
+# END WordPress
 ```

@@ -91,8 +91,6 @@ class JNE_Shipping_Rate
 			);
 			add_option('jne_settings', $settings, '', 'yes');
 		}
-		
-		// a:2:{s:7:"display";i:200;s:9:"provinces";a:0:{}}
 	}
 	
 	/**
@@ -101,7 +99,51 @@ class JNE_Shipping_Rate
 	public function display_page()
 	{		
 		global $jne;
+
+		/*
+		 * debugging (development)
+		 *
+		$index_provinsi = 836;
+
+		// kota/kabupaten group
+
+		$populate = $jne->getData();
+
+		$provinsi = $populate[$index_provinsi]['provinsi'];
+		$rows = array_filter($populate, function($d) use($provinsi){
+			return preg_match('/\b'. $provinsi .'\b/i', $d['provinsi']);
+		});
+
+		$data = array();
+		foreach( $rows as $index => $row ){
+			$data[$row['kota']][] = array(
+				'index' => $index,
+				'name'  => $row['kecamatan']
+			);
+		}	
 		
+		$code = $data[$p]['k_code'];
+		$byProvinsi = array_filter($data, function($d) use($code){
+			return preg_match('/\b'. $code .'\b/i', $d['k_code']);
+		});
+
+		$rows = array();
+		foreach( $byProvinsi as $filter ){
+			$f = array('code', 'provinsi', 'kota', 'kecamatan', 'k_code');
+			$rows[] = array_intersect_key($filter, array_flip($f));
+		}
+
+		jne_rate_debug($data, 'kota/kabupaten (group) index provinsi ' . $index_provinsi);
+*/		
+/*		
+		// kota
+
+		$kota = $jne->getCities( $index_provinsi );
+		$data = array_map(function($d){
+			return array_pop(array_intersect_key($d, array_flip(array('name'))));
+		}, $kota);
+		jne_rate_debug($data, 'kota index provinsi ' . $index_provinsi);
+*/
 		include( JNE_PLUGIN_TPL_DIR . '/page-new.php');		
 	}
 	
@@ -141,8 +183,6 @@ class JNE_Shipping_Rate
 		
 		// get provinces
 		$provinsi = $jne->getProvinces();
-
-		jne_rate_debug($provinsi);
 		
 		// action save
 		if ('save' == $_REQUEST['action']) 
@@ -218,6 +258,7 @@ class JNE_Shipping_Rate
 		
 		// register styles
 		wp_enqueue_style('jne-css', JNE_PLUGIN_ASSET_URL . '/css/style.css');
+		wp_enqueue_style('tipTip-css', JNE_PLUGIN_ASSET_URL . '/css/tipTip.css');
 		
 		// jquery core
 		wp_enqueue_script('jquery');
@@ -228,6 +269,10 @@ class JNE_Shipping_Rate
 		));
 		// bootstrap tooltip
 		wp_enqueue_script('bootstrap-tooltip', JNE_PLUGIN_ASSET_URL . '/js/bootstrap-tooltip.js', array(
+			'jquery'
+		));		
+		// bootstrap popover
+		wp_enqueue_script('jquery-tipTip', JNE_PLUGIN_ASSET_URL . '/js/jquery.tipTip.min.js', array(
 			'jquery'
 		));
 		
@@ -301,9 +346,12 @@ class JNE_Shipping_Rate
 					{
 						$populate = $jne->getData();
 
-						$code = $populate[$provinsi]['k_code'];
-						$rows = array_filter($populate, function($d) use($code){
-							return preg_match('/\b'. $code .'\b/i', $d['k_code']);
+						/**
+						 * filter berdasarkan nama provinsi
+						 */
+						$provinsi = $populate[$provinsi]['provinsi'];
+						$rows = array_filter($populate, function($d) use($provinsi){
+							return preg_match('/\b'. $provinsi .'\b/i', $d['provinsi']);
 						});
 
 						$data = array();
@@ -346,9 +394,9 @@ class JNE_Shipping_Rate
 				/* filter data berdasarkan provinsi */
 				if( isset($index_provinsi) )
 				{
-					$code = $data[$index_provinsi]['k_code'];
-					$byProvinsi = array_filter($data, function($d) use($code){
-						return preg_match('/\b'. $code .'\b/i', $d['k_code']);
+					$provinsi = $data[$index_provinsi]['provinsi'];
+					$byProvinsi = array_filter($data, function($d) use($provinsi){
+						return preg_match('/\b'. $provinsi .'\b/i', $d['provinsi']);
 					});
 
 					$rows = array();

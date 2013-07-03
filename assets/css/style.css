@@ -1,4 +1,8 @@
 
+.text-right {
+	text-align: right;
+}
+
 #loading img { 
 	border: none;
 	margin-bottom: 0;
@@ -91,4 +95,22 @@ ul#shipping_method li {
 }
 .shipping_calculator .form-row.required:after {
 	content: 'This field is required';
+}
+
+/* popup/tip table weight content */
+
+.jne-weight-content tr.row-jne-weight-data{}
+.jne-weight-content tr.row-jne-weight-tolerance{}
+.jne-weight-content tr.row-jne-weight-total{}
+
+.jne-weight-content td.col-1{
+	width: 70%;
+}
+.jne-weight-content td.col-2{
+	width: 2%; 
+}
+.jne-weight-content td.col-3{
+	width: 28%;
+	padding-left: 0;
+	padding-right: 0;
 }

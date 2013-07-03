@@ -1,5 +1,8 @@
 jQuery(function($) {
 
+	// tooltip weight
+	$('.tooltip-jne-weight').tipTip({ content: $('#weight-details').html() });
+
 	function appendCombobox(provinsi, cb, callback) {
 		console.log('appendCombobox', 'provinsi', provinsi);
 		$.getJSON(jne_params.ajaxurl, {

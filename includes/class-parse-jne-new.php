@@ -181,11 +181,14 @@ class Parse_JNE2
 		return $this->_provinces;
 	}
 
+	/**
+	 * Filter berdasarkan nama provinsi
+	 */ 
 	public function getCities( $index )
 	{
-		$code = $this->_data[$index]['k_code'];
-		$kota = array_filter($this->_data, function($data) use($code) {
-			return preg_match('/\b'. $code .'\b/i', $data['k_code']);
+		$provinsi = $this->_data[$index]['provinsi'];
+		$kota = array_filter($this->_data, function($data) use($provinsi) {
+			return preg_match('/\b'. $provinsi .'\b/i', $data['provinsi']);
 		});	
 		
 		$_kota = array();
