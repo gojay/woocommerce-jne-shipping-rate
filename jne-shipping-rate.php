@@ -8,6 +8,8 @@ Author: Dani Gojay
 Author URI: http://gojayincode.com
 License: GPL2
 */
+error_reporting(E_ALL & ~E_NOTICE);
+
 global $wp_version;
 define( 'JNE_REQUIRED_WP_VERSION', '3.0' );
 
@@ -16,6 +18,10 @@ defined('APPLICATION_ENV')
     || define('APPLICATION_ENV',
               (getenv('APPLICATION_ENV') ? getenv('APPLICATION_ENV')
                                          : 'production'));
+
+// if( APPLICATION_ENV == 'production' ){
+    ini_set('display_errors','off');
+// }
 
 /**
  * set debug mode

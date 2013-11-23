@@ -396,6 +396,7 @@ class WC_JNE_Rate extends WC_Shipping_Method
 	private function _calculate_weight( $carts )
 	{
 		$total_weight = 0;
+		$weights = 0;
 
 		foreach( $carts as $cart_product )
 		{

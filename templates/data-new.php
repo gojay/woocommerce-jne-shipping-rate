@@ -1,12 +1,12 @@
 <?php
 /* parameters */
-$limit   	= (int) $_GET['limit'];
-$offset  	= (int) $_GET['offset'];
+$limit   	= isset($_GET['limit'])  ? $_GET['limit']  : 100;
+$offset  	= isset($_GET['offset']) ? $_GET['offset'] : 0;
 
 /* pagination options */
 $paging = array(
 	'offset'	=> $offset,
-	'limit'		=> ( $limit ) ? $limit : 100,
+	'limit'		=> $limit,
 	'total'		=> count( $rows ),
 	'page'		=> 0,
 	'pages'		=> 1
@@ -21,16 +21,21 @@ $paging = array(
 $x = $paging['offset'];
 $until = $x + $paging['limit'];
 
+$output = '';
+
 while( $x <= $until ) 
 {		
+
 	/* baris data sesuai index */
-	if( $row = $rows[$x] )
+	if( $x > 0 && $row = $rows[$x] )
 	{
 		$first = array_shift(array_keys($row['tarif'])); // ambil array key elemen pertama
 		$count = count($row['tarif']);					 // jumlah data tarif
 		foreach( $row['tarif'] as $layanan => $tarif )
 		{
-			/* buat output table */
+			/* buat output table baris */
+
+			$etd = (isset($tarif['etd'])) ? $tarif['etd'] : 'N/A' ;
 			
 			if( $first == $layanan )
 			{
@@ -41,7 +46,7 @@ while( $x <= $until )
 						<td rowspan="'. $count .'" class="row-center">' . JNE_normalize( $row['kecamatan'] ) . '</td>
 						<td class="text-center">' . strtoupper( $layanan ) . '</td>
 						<td class="text-center">' . JNE_rupiah( $tarif['harga'] ) . '</td>
-						<td class="text-center">' . $tarif['etd'] . '</td>
+						<td class="text-center">' . $etd . '</td>
 					</tr>';		
 			} 
 			else
@@ -50,7 +55,7 @@ while( $x <= $until )
 					<tr>
 						<td class="text-center">' . strtoupper( $layanan ) . '</td>
 						<td class="text-center">' . JNE_rupiah( $tarif['harga'] ) . '</td>
-						<td class="text-center">' . $tarif['etd'] . '</td>
+						<td class="text-center">' . $etd . '</td>
 					</tr>';
 			}
 		}

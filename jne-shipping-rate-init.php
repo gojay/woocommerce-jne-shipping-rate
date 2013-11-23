@@ -305,7 +305,7 @@ class JNE_Shipping_Rate
 			'is_logged_in' 	=> is_user_logged_in(),
 			'woocommerce' 	=> array(
 				'jne_is_enabled' 		=> ( $woocommerce_jne_settings['enabled'] == 'yes' ),
-				'chosen_shipping_city' 	=> $_SESSION['_chosen_city']
+				'chosen_shipping_city' 	=> isset($_SESSION['_chosen_city']) ? $_SESSION['_chosen_city'] : null
 			)			
 		);
 		
@@ -327,137 +327,144 @@ class JNE_Shipping_Rate
 		if ( !wp_verify_nonce($nonce, self::NONCE_AJAX) )
 			die('error');
 
-		$get = $_GET['get'];
-		switch( $get ){
-			/* @return JSON */	
-			case 'provinsi':
-				$provinces = JNE_sortProvinsi( $jne->getProvinces() );
-				header('content-type', 'application/json');
-				echo json_encode( $provinces );
-				break;
-				
-			/* @return JSON */	
-			case 'kota':	
-				$provinsi = $_GET['provinsi'];
-				$group    = (isset($_GET['group'])) ? $_GET['group'] : false ;
-				if( $provinsi )
-				{
-					if( $group )
+		try 
+		{
+			$get = $_GET['get'];
+			switch( $get ){
+				/* @return JSON */	
+				case 'provinsi':
+					$provinces = JNE_sortProvinsi( $jne->getProvinces() );
+					header('content-type', 'application/json');
+					echo json_encode( $provinces );
+					break;
+					
+				/* @return JSON */	
+				case 'kota':	
+					$provinsi = $_GET['provinsi'];
+					$group    = (isset($_GET['group'])) ? $_GET['group'] : false ;
+					if( $provinsi )
 					{
-						$populate = $jne->getData();
+						if( $group )
+						{
+							$populate = $jne->getData();
 
-						/**
-						 * filter berdasarkan nama provinsi
-						 */
-						$provinsi = $populate[$provinsi]['provinsi'];
-						$rows = array_filter($populate, function($d) use($provinsi){
-							return preg_match('/\b'. $provinsi .'\b/', $d['provinsi']);
-						});
+							/**
+							 * filter berdasarkan nama provinsi
+							 */
+							$provinsi = $populate[$provinsi]['provinsi'];
+							$rows = array_filter($populate, function($d) use($provinsi){
+								return preg_match('/\b'. $provinsi .'\b/', $d['provinsi']);
+							});
 
-						$data = array();
-						foreach( $rows as $index => $row ){
-							$data[$row['kota']][] = array(
-								'index' => $index,
-								'name'  => $row['kecamatan']
-							);
-						}	
-						$response = array( 'data' => $data );
+							$data = array();
+							foreach( $rows as $index => $row ){
+								$data[$row['kota']][] = array(
+									'index' => $index,
+									'name'  => $row['kecamatan']
+								);
+							}	
+							$response = array( 'data' => $data );
+						}
+						else {
+							$kota = $jne->getCities( $provinsi );
+							$data = array_map(function($d){
+								return array_pop(array_intersect_key($d, array_flip(array('name'))));
+							}, $kota);
+							$response = array( 'data' => $data );
+						}
+								
 					}
 					else {
-						$kota = $jne->getCities( $provinsi );
-						$data = array_map(function($d){
-							return array_pop(array_intersect_key($d, array_flip(array('name'))));
-						}, $kota);
-						$response = array( 'data' => $data );
+						$response = array( 
+							'error' => true, 
+							'message' => 'provinsi kosong' 
+						);	
+					}
+						
+					header('content-type', 'application/json');
+					echo json_encode( $response );
+					break;
+				
+				/* @return String html */		
+				case 'pagination':
+				case 'index':
+					$rows = array();
+
+					$data = $jne->getData();
+					
+					$index_kota 	= isset($_GET['index_kota']) ? $_GET['index_kota'] : null;
+					$index_provinsi = isset($_GET['index_provinsi']) ? $_GET['index_provinsi'] : null;
+					
+					/* filter data berdasarkan provinsi */
+					if( isset($index_provinsi) )
+					{
+						$provinsi = $data[$index_provinsi]['provinsi'];
+						$byProvinsi = array_filter($data, function($d) use($provinsi){
+							return preg_match('/\b'. $provinsi .'\b/i', $d['provinsi']);
+						});
+
+						foreach( $byProvinsi as $filter ){
+							$rows[] = $filter;
+						}
+					}
+					/* filter data berdasarkan kota */
+					else if( isset($index_kota) )
+					{				
+						$kota = $data[$index_kota]['kota'];
+						$byProvinsi = array_filter($data, function($d) use($kota){
+							return preg_match('/\b'. $kota .'\b/i', $d['kota']);
+						});
+
+						foreach( $byProvinsi as $filter ){
+							$rows[] = $filter;
+						}
+					}
+					/* tampilkan semua */
+					else {
+						$rows = JNE_sortAll( $data );
+					}
+						
+					include( JNE_PLUGIN_TPL_DIR . '/data-new.php' );
+					break;
+					
+				/* @return String html */
+				case 'show_tracking_in_modal':
+					include 'includes/html-dom/simple_html_dom.php';
+					
+					$awb = $_GET['awb'];	
+					
+					if (!function_exists("curl_init"))
+					{
+						die('Aktifkan ekstensi CURL pada PHP anda...');
 					}
 							
-				}
-				else {
-					$response = array( 
-						'error' => true, 
-						'message' => 'provinsi kosong' 
-					);	
-				}
+					$chp = curl_init();   
+					curl_setopt($chp, CURLOPT_USERAGENT, $_SERVER['HTTP_USER_AGENT']); 
+					curl_setopt($chp, CURLOPT_FOLLOWLOCATION, 1);
+					curl_setopt($chp, CURLOPT_RETURNTRANSFER, 1);    
+
+					$url = "http://jne.co.id/index.php?mib=tracking.detail&awb=".$awb;
+					curl_setopt($chp, CURLOPT_URL, $url);
+					curl_setopt($chp, CURLOPT_REFERER, "http://www.jne.co.id/index.php");
+					curl_setopt($chp, CURLOPT_URL, $url);
+					curl_setopt($chp, CURLOPT_CONNECTTIMEOUT,0); 
+					curl_setopt($chp, CURLOPT_TIMEOUT, 400); //timeout in seconds
+					$content = curl_exec($chp);
+
+					$html = str_get_html($content);
+					echo $html->find('td.content', 2)->innertext;
+							
+					curl_close($chp);
+					break;
 					
-				header('content-type', 'application/json');
-				echo json_encode( $response );
-				break;
-			
-			/* @return String html */		
-			case 'pagination':
-			case 'index':
-				$data = $jne->getData();
-				
-				$index_kota = $_GET['index_kota'];
-				$index_provinsi = $_GET['index_provinsi'];
-				
-				/* filter data berdasarkan provinsi */
-				if( isset($index_provinsi) )
-				{
-					$provinsi = $data[$index_provinsi]['provinsi'];
-					$byProvinsi = array_filter($data, function($d) use($provinsi){
-						return preg_match('/\b'. $provinsi .'\b/i', $d['provinsi']);
-					});
-
-					$rows = array();
-					foreach( $byProvinsi as $filter )
-						$rows[] = $filter;
-				}
-				/* filter data berdasarkan kota */
-				else if( isset($index_kota) )
-				{				
-					$kota = $data[$index_kota]['kota'];
-					$byProvinsi = array_filter($data, function($d) use($kota){
-						return preg_match('/\b'. $kota .'\b/i', $d['kota']);
-					});
-
-					$rows = array();
-					foreach( $byProvinsi as $filter )
-						$rows[] = $filter;
-				}
-				/* tampilkan semua */
-				else {
-					$rows = JNE_sortAll( $data );
-				}
-					
-				include( JNE_PLUGIN_TPL_DIR . '/data-new.php' );
-				break;
-				
-			/* @return String html */
-			case 'show_tracking_in_modal':
-				include 'includes/html-dom/simple_html_dom.php';
-				
-				$awb = $_GET['awb'];	
-				
-				if (!function_exists("curl_init"))
-				{
-					die('Aktifkan ekstensi CURL pada PHP anda...');
-				}
-						
-				$chp = curl_init();   
-				curl_setopt($chp, CURLOPT_USERAGENT, $_SERVER['HTTP_USER_AGENT']); 
-				curl_setopt($chp, CURLOPT_FOLLOWLOCATION, 1);
-				curl_setopt($chp, CURLOPT_RETURNTRANSFER, 1);    
-
-				$url = "http://jne.co.id/index.php?mib=tracking.detail&awb=".$awb;
-				curl_setopt($chp, CURLOPT_URL, $url);
-				curl_setopt($chp, CURLOPT_REFERER, "http://www.jne.co.id/index.php");
-				curl_setopt($chp, CURLOPT_URL, $url);
-				curl_setopt($chp, CURLOPT_CONNECTTIMEOUT,0); 
-				curl_setopt($chp, CURLOPT_TIMEOUT, 400); //timeout in seconds
-				$content = curl_exec($chp);
-
-				$html = str_get_html($content);
-				echo $html->find('td.content', 2)->innertext;
-						
-				curl_close($chp);
-				break;
-				
-			/* @return String html */	
-			case 'show_jne_in_modal':
-				include( JNE_PLUGIN_TPL_DIR . '/page-modal-new.php');
-				break;
-		} 
+				/* @return String html */	
+				case 'show_jne_in_modal':
+					include( JNE_PLUGIN_TPL_DIR . '/page-modal-new.php');
+					break;
+			} 
+		} catch(Exception $e) {
+			die($e->getMessage($e->getMessage()));
+		}
 		
 		die();
 	}
