@@ -129,7 +129,7 @@ jQuery(function($){
 	});
 
 	/* aksi pagination */
-	$('.pagination a').live('click', function(){
+	$('#taxModal .pagination a').live('click', function(){
 		var index_provinsi = $('#combobox_provinsi').val();
 		var index_kota     = $('#combobox_kota').val();
 		var offset = $(this).data('parameter');
