@@ -72,10 +72,11 @@
 
 	}
 	
-/*	.widget-jne .form-search input[type="text"] {
-		height: 30px;
+	.widget-jne .form-search input[type="text"] {
+		max-height: 30px;
+		height: auto;
 	}
-*/	
+
 /* end widget jne style */
 
 ul#shipping_method {

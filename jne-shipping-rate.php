@@ -19,9 +19,9 @@ defined('APPLICATION_ENV')
               (getenv('APPLICATION_ENV') ? getenv('APPLICATION_ENV')
                                          : 'production'));
 
-// if( APPLICATION_ENV == 'production' ){
+if( APPLICATION_ENV == 'production' ){
     ini_set('display_errors','off');
-// }
+}
 
 /**
  * set debug mode

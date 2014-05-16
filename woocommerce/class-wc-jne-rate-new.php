@@ -26,7 +26,7 @@ class WC_JNE_Rate extends WC_Shipping_Method
 		$this->method_title  = __('JNE Shipping Rate', 'woocommerce');
 		
 		$this->jne_shipping_rate_option = 'jne_settings';
-		$this->admin_page_heading 		= __('JNE Rates', 'woocommerce');
+		$this->admin_page_heading 		= __('JNE Shipping Rate', 'woocommerce');
 		
 		// Saving admin options
 		// http://wcdocs.woothemes.com/codex/extending/settings-api/#section-3
@@ -103,109 +103,202 @@ class WC_JNE_Rate extends WC_Shipping_Method
 	{
 		global $woocommerce, $jne;
 
+		$tab = isset($_GET['tab_jne']) ? $_GET['tab_jne'] : 'config' ;
+		$filename = isset($_GET['filename']) ? $_GET['filename'] : 'woocommerce-jne-new' ;
+
 		$provinsi = $jne->getProvinces();
 		?>
 		<h3><?php echo $this->admin_page_heading; ?></h3>
 		<p><?php echo $this->admin_page_description; ?></p>
-		<table class="form-table">
-		<!-- Generate the HTML For the settings form. -->
-		<?php $this->generate_settings_html(); ?>
-			<!-- jumlah baris -->
-			<tr valign="top">
-				<th scope="row" class="titledesc">
-					<label for="jne_display"> <?php _e( 'Number of rows', 'woocommerce' ) ?> </label><br/>
-					<span class="description"> <?php _e( 'Masukkan jumlah baris yang ditampilkan pada daftar tarif JNE', 'woocommerce' ) ?> </span>
-				</th>
-				<td>
-					<input name="jne_display" type="number" id="jne_display" class="small-text" value="<?php echo $this->jne_settings['display'] ?>"> 
-				</td>
-			</tr>
-			<!-- provinsi -->
-			<tr valign="top">
-				<th scope="row" class="titledesc">
-					<label for="jne_provinces"> <?php _e( 'Select Provinces', 'woocommerce' ) ?> </label><br/>
-					<span class="description"> <?php _e( 'Pilih provinsi yang diperbolehkan untuk pengiriman JNE', 'woocommerce' ) ?> </span>
-				</th>
-				<td>
-					<p>
-						<label>
-							<input type="checkbox" id="select-all-provinces"
-							<?php echo ( count($this->jne_settings['provinces']) == 0 ) ? 'checked' : '' ; ?>/> <?php _e( 'Select all', 'woocommerce' ) ?>
-						</label>
-					</p>
-					
-					<div class="jne-setting-provinces">
-					<?php 
-					$i = 1; 
-					foreach( $provinsi as $index => $prov ) : 
-						$checked = ( $allowed = $this->jne_settings['provinces'] ) 
-										? (in_array( $index, $allowed ) ? 'checked' : '')
-										: 'checked' ;
-						?>
-						<label>
-							<input type="checkbox" name="jne_provinsi[]" value="<?php echo $index ?>" class="cb-provinsi"
-							<?php echo $checked;  ?> /> <?php echo $prov ?> 
-						</label>
-						<?php if( ($i % 10) == 0 ) : ?>
-						</div>
-						<div class="jne-setting-provinces">
-						<?php 
-						endif; 
-						$i++; 
-					endforeach; ?>
-					</div>
-				</td>
-			</tr>
-			<!-- berat -->
-			<tr valign="top">
-				<th scope="row" class="titledesc">
-					<label for="jne_weight"> <?php _e( 'Default Weight (kg)', 'woocommerce' ) ?> </label><br/>
-					<span class="description"> <?php _e( 'Masukkan berat \'default\' (dalam desimal) jika  berat produk adalah kosong atau nol', 'woocommerce' ) ?> </span>
-				</th>
-				<td>
-					<input name="jne_weight" type="text" class="small-text" value="<?php echo $this->jne_settings['weight'] ?>" placeholder="1.00"> 
-				</td>
-			</tr>
-			<!-- toleransi -->
-			<tr valign="top">
-				<th scope="row" class="titledesc">
-					<label for="jne_tolerance"> <?php _e( 'Tolerance', 'woocommerce' ) ?> </label><br/>
-					<span class="description"> <?php _e( 'Masukkan nilai toleransi JNE', 'woocommerce' ) ?> </span>
-				</th>
-				<td>
-					<input name="jne_tolerance" type="text" class="small-text" value="<?php echo $this->jne_settings['tolerance'] ?>" placeholder="0.00"> 
-				</td>
-			</tr>
-		</table><!--/.form-table-->
-		<input type="hidden" name="action" value="save" />
+		<h2 id="nav-tab-jne" class="nav-tab-wrapper woo-nav-tab-wrapper" style="margin:10px 0;">
+			<a href="#config-jne" class="nav-tab <?php echo $tab == 'config' ? 'nav-tab-active' : '' ?>">Config</a>
+			<a href="#editor-jne" class="nav-tab <?php echo $tab == 'editor' ? 'nav-tab-active' : '' ?>">JS Editor</a>
+			<a href="#tax-jne" class="nav-tab">Tax</a>
+		</h2>
+		<div id="content-tab-jne">
+			<div id="config-jne" class="<?php echo $tab == 'config' ? 'content-active' : '' ?>">
+				<table class="form-table">
+				<!-- Generate the HTML For the settings form. -->
+				<?php $this->generate_settings_html(); ?>
+					<!-- jumlah baris -->
+					<tr valign="top">
+						<th scope="row" class="titledesc">
+							<label for="jne_display"> <?php _e( 'Number of rows', 'woocommerce' ) ?> </label><br/>
+							<span class="description"> <?php _e( 'Masukkan jumlah baris yang ditampilkan pada daftar tarif JNE', 'woocommerce' ) ?> </span>
+						</th>
+						<td>
+							<input name="jne_display" type="number" id="jne_display" class="small-text" value="<?php echo $this->jne_settings['display'] ?>"> 
+						</td>
+					</tr>
+					<!-- provinsi -->
+					<tr valign="top">
+						<th scope="row" class="titledesc">
+							<label for="jne_provinces"> <?php _e( 'Select Provinces', 'woocommerce' ) ?> </label><br/>
+							<span class="description"> <?php _e( 'Pilih provinsi yang diperbolehkan untuk pengiriman JNE', 'woocommerce' ) ?> </span>
+						</th>
+						<td>
+							<p>
+								<label>
+									<input type="checkbox" id="select-all-provinces"
+									<?php echo ( count($this->jne_settings['provinces']) == 0 ) ? 'checked' : '' ; ?>/> <?php _e( 'Select all', 'woocommerce' ) ?>
+								</label>
+							</p>
+							
+							<div class="jne-setting-provinces">
+							<?php 
+							$i = 1; 
+							foreach( $provinsi as $index => $prov ) : 
+								$checked = ( $allowed = $this->jne_settings['provinces'] ) 
+												? (in_array( $index, $allowed ) ? 'checked' : '')
+												: 'checked' ;
+								?>
+								<label>
+									<input type="checkbox" name="jne_provinsi[]" value="<?php echo $index ?>" class="cb-provinsi"
+									<?php echo $checked;  ?> /> <?php echo $prov ?> 
+								</label>
+								<?php if( ($i % 10) == 0 ) : ?>
+								</div>
+								<div class="jne-setting-provinces">
+								<?php 
+								endif; 
+								$i++; 
+							endforeach; ?>
+							</div>
+						</td>
+					</tr>
+					<!-- berat -->
+					<tr valign="top">
+						<th scope="row" class="titledesc">
+							<label for="jne_weight"> <?php _e( 'Default Weight (kg)', 'woocommerce' ) ?> </label><br/>
+							<span class="description"> <?php _e( 'Masukkan berat \'default\' (dalam desimal) jika  berat produk adalah kosong atau nol', 'woocommerce' ) ?> </span>
+						</th>
+						<td>
+							<input name="jne_weight" type="text" class="small-text" value="<?php echo $this->jne_settings['weight'] ?>" placeholder="1.00"> 
+						</td>
+					</tr>
+					<!-- toleransi -->
+					<tr valign="top">
+						<th scope="row" class="titledesc">
+							<label for="jne_tolerance"> <?php _e( 'Tolerance', 'woocommerce' ) ?> </label><br/>
+							<span class="description"> <?php _e( 'Masukkan nilai toleransi JNE', 'woocommerce' ) ?> </span>
+						</th>
+						<td>
+							<input name="jne_tolerance" type="text" class="small-text" value="<?php echo $this->jne_settings['tolerance'] ?>" placeholder="0.00"> 
+						</td>
+					</tr>
+				</table><!--/.form-table-->
+			</div>
+			<div id="editor-jne" class="<?php echo $tab == 'editor' ? 'content-active' : '' ?>">
+				<link href="<?php echo JNE_PLUGIN_WOO_URL ?>/plugin/linedtextarea/jquery-linedtextarea.css" type="text/css" rel="stylesheet">
+				<script src="<?php echo JNE_PLUGIN_WOO_URL ?>/plugin/linedtextarea/jquery-linedtextarea.js"></script>
+				<?php
+				$filename .= '.js';
+				$file = JNE_PLUGIN_WOO_DIR . '/js/'. $filename;
+				if( file_exists($file) ) :
+					$text = file_get_contents($file); ?>
+					<strong><label for="plugin">Select JS file to edit: </label></strong>
+					<select name="editor-jne-select">
+						<option value="woocommerce-jne-new" <?php if($filename == 'woocommerce-jne-new.js') echo 'selected="selected"'; ?>>Ajax Woocommerce</option>
+						<option value="ajax-new" <?php if($filename == 'ajax-new.js') echo 'selected="selected"'; ?>>Ajax JNE</option>
+					</select>
+					<button id="editor-jne-button" type="button" class="button" value="Select">Select</button>
+					<p>File : <?php echo $filename ?></p>
+					<textarea id="script-editor-jne" name="scripts" cols="100" rows="40" style="resize: none; width:70%; background:#eee"><?php echo htmlspecialchars($text) ?></textarea>
+					<input type="hidden" name="file-editor-jne" value="<?php echo $filename ?>" />
+				<?php endif; ?>
+			</div>
+			<div id="tax-jne">
+				
+			</div>
+		</div>
+		<input type="hidden" name="action-jne" value="config-jne" />
+
 		<!-- css -->
 		<style>
 		.jne-setting-provinces { display:inline-table; width: 200px }
 		.jne-setting-provinces label{ display:block }
+
+		#content-tab-jne > div { display:none; }
+		#content-tab-jne > .content-active { display:block; }
+
+		#content-tab-jne h3 { padding: 5px 10px; }
 		</style>
+		<link href="<?php echo JNE_PLUGIN_WOO_URL ?>/plugin/linedtextarea/jquery-linedtextarea.css" type="text/css" rel="stylesheet">
+		<script src="<?php echo JNE_PLUGIN_WOO_URL ?>/plugin/linedtextarea/jquery-linedtextarea.js"></script>
 		<!-- /css -->
 		<!-- javascript -->
 		<script type="text/javascript">
-			jQuery(document).ready(function(){
-				jQuery('#select-all-provinces').click(function(){
+			jQuery(document).ready(function($){
+				var tab = '<?php echo $tab ?>';
+				var $editorElm = $("#script-editor-jne");
+				var $taxElm = $("#tax-jne");
+
+				if(tab == 'editor'){
+					$editorElm.linedtextarea({selectedLine: 1});
+				}
+
+				$('#editor-jne-button').click(function(){
+					var filename = $('select[name="editor-jne-select"]').val();
+					var url = window.location.href;
+					if(/filename/.test(url)){
+						url = url.replace(/(filename=).*/,'$1' + filename);
+					} else {
+						url += '&tab_jne=editor&filename='+filename;
+					}
+
+					window.location.href = url;
+					return false;
+				});
+
+				$('#nav-tab-jne > a').click(function(e){
+					var $parent = $(this).parent(),
+						contentActive = e.target.hash,
+						content = contentActive.replace('#','');
+
+					$parent.children().each(function(i,e){
+						$(e).removeClass('nav-tab-active');
+					});
+					$('#content-tab-jne > div').each(function(i,e){
+						$(e).removeClass('content-active');
+					});
+
+					$(this).addClass('nav-tab-active');
+					$(contentActive).addClass('content-active');
+
+					if( contentActive == '#editor-jne' && 
+						!$editorElm.parents('.linedwrap').length ) {
+						$editorElm.linedtextarea({selectedLine: 1});
+					}
+					else if( contentActive == '#tax-jne' && !$('iframe', $taxElm).length ){
+
+						// $taxElm.html('<iframe src="http://dev.woocommerce/jne" height="100%" width="100%" frameborder="0" />');
+						
+					}
+
+					$('input[name="action-jne"]').val(content);
+					// $('input[name="_wp_http_referer"]')[0].value += '&tab='+ content;
+
+					return false;
+				});
+				$('#select-all-provinces').click(function(){
 					var checked = this.checked
-					jQuery('input.cb-provinsi').each(function(){
+					$('input.cb-provinsi').each(function(){
 						this.checked = checked;
 					})
-				})
-			})	
+				});				
 
-			jQuery('#form-jne-settings').submit(function(){
-				var form = jQuery(this).serialize(),
-					cb = jQuery('input.cb-provinsi'),											
-					cbChecked = cb.filter(':checked').length;
-				
-				if( cbChecked == 0 )
-				{
-					alert('Silahkan pilih provinsi. provinsi tidak boleh kosong');
-					return false;
-				}
-			})
+				$('#form-jne-settings').submit(function(){
+					var form = $(this).serialize(),
+						cb = $('input.cb-provinsi'),											
+						cbChecked = cb.filter(':checked').length;
+					
+					if( cbChecked == 0 )
+					{
+						alert('Silahkan pilih provinsi. provinsi tidak boleh kosong');
+						return false;
+					}
+				});
+			})	
 		</script>
 		<!-- /javascript -->
 		<?php
@@ -215,7 +308,7 @@ class WC_JNE_Rate extends WC_Shipping_Method
 	{
 		global $jne;
 
-		if ('save' == $_POST['action']) 
+		if ('config-jne' == $_POST['action-jne']) 
 		{
 			$provinsi  = $jne->getProvinces();
 			$provinces = $_POST['jne_provinsi'];
@@ -228,6 +321,11 @@ class WC_JNE_Rate extends WC_Shipping_Method
 			
 			update_option( $this->jne_shipping_rate_option, $settings);	
 		} 
+		else if ('editor-jne' == $_POST['action-jne']) 
+		{
+			$file = JNE_PLUGIN_WOO_DIR . '/js/' . $_POST['file-editor-jne'];
+    		file_put_contents($file, stripslashes($_POST['scripts']));
+		}
 	}
 	
 	public function is_available( $package ) 
